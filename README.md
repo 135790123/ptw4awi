@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-Folder 'data' contains the necessary dataset required by the research questions. Folder '1_validity' contains the code that explores the performance of LLMs in AWI. Folder '2_pretrain' and '3_finetune' explores LLMs' performance under special scenarioes, i.e., models without pretraining or finetuning process. Folder '4_project' explores performance in different code projects.
+Folder '1_validity' contains the code that explores the effectiveness of Pre-Trained model (PTM) in AWI and PTMs' performance under different data preprocessing ways (i.e., warning context extraction and abstraction). Folder '2_pretrain' and '3_finetune' explores PTMs' performance under different components in the model training. Folder '4_project' explores PTMs' performance in different model prediction scenations (i.e., within and cross AWI scenarios). Folder 'data' contains the necessary dataset required by the research questions. 
 
 ## How to run
 
