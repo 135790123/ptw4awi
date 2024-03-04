@@ -1,0 +1,2381 @@
+,source,target
+0,"@SuppressWarnings(""unchecked"")
+protected <C extends Collection<V>> AbstractMultiValuedMap(final Map<K, ? super C> map, final Class<C> collectionClazz, final int initialCollectionCapacity) {
+if (map == null) {
+throw new IllegalArgumentException(""Map must not be null"");
+}
+if (initialCollectionCapacity < 0) {
+throw new IllegalArgumentException(""Illegal Capacity: "" + initialCollectionCapacity);
+}
+this.map = (Map<K, Collection<V>>) map;
+this.collectionFactory = new InstantiateFactory<C>(collectionClazz, new Class[] { Integer.TYPE }, new Object[] { new Integer(initialCollectionCapacity) });
+}",1
+1,"public MultiKey(final K[] keys, final boolean makeClone) {
+super();
+Objects.requireNonNull(keys, ""keys"");
+if (makeClone) {
+this.keys = keys.clone();
+} else {
+this.keys = keys;
+}
+calculateHashCode(keys);
+}",0
+2,"@SuppressWarnings(""unchecked"")
+public static <K, V> Map<K, V> putAll(final Map<K, V> map, final Object[] array) {
+map.size();
+if (array == null || array.length == 0) {
+return map;
+}
+final Object obj = array[0];
+if (obj instanceof Map.Entry) {
+for (final Object element : array) {
+final Map.Entry<K, V> entry = (Map.Entry<K, V>) element;
+map.put(entry.getKey(), entry.getValue());
+}
+} else if (obj instanceof KeyValue) {
+for (final Object element : array) {
+final KeyValue<K, V> keyval = (KeyValue<K, V>) element;
+map.put(keyval.getKey(), keyval.getValue());
+}
+} else if (obj instanceof Object[]) {
+for (int i = 0; i < array.length; i++) {
+final Object[] sub = (Object[]) array[i];
+if (sub == null || sub.length < 2) {
+throw new IllegalArgumentException(""Invalid array element: "" + i);
+}
+map.put((K) sub[0], (V) sub[1]);
+}
+} else {
+for (int i = 0; i < array.length - 1; ) {
+map.put((K) array[i++], (V) array[i++]);
+}
+}
+return map;
+}",1
+3,"@Override
+public String toString() {
+if (delegateMap != null) {
+return delegateMap.toString();
+}
+if (size == 0) {
+return ""{}"";
+}
+final StringBuilder buf = new StringBuilder(128);
+buf.append('{');
+switch(size) {
+case 3:
+buf.append(key3 == this ? ""(this Map)"" : key3);
+buf.append('=');
+buf.append(value3 == this ? ""(this Map)"" : value3);
+buf.append(',');
+case 2:
+buf.append(key2 == this ? ""(this Map)"" : key2);
+buf.append('=');
+buf.append(value2 == this ? ""(this Map)"" : value2);
+buf.append(',');
+case 1:
+buf.append(key1 == this ? ""(this Map)"" : key1);
+buf.append('=');
+buf.append(value1 == this ? ""(this Map)"" : value1);
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+buf.append('}');
+return buf.toString();
+}",0
+4,"@Override
+public List<T> get(final int index) {
+final int listSize = size();
+if (listSize < 0) {
+throw new IllegalArgumentException(""negative size: "" + listSize);
+}
+if (index < 0) {
+throw new IndexOutOfBoundsException(""Index "" + index + "" must not be negative"");
+}
+if (index >= listSize) {
+throw new IndexOutOfBoundsException(""Index "" + index + "" must be less than size "" + listSize);
+}
+final int start = index * size;
+final int end = Math.min(start + size, list.size());
+return list.subList(start, end);
+}",0
+5,"@Override
+public boolean equals(final Object object) {
+if (object == this) {
+return true;
+}
+synchronized (lock) {
+return getBag().equals(object);
+}
+}",0
+6,"private UnmodifiableBidiMap<V, K> inverse;",0
+7,"protected final Transformer<? super E, ? extends E> transformer;",0
+8,private final Predicate<? super T> iPredicate1;,0
+9,"@SuppressWarnings(""unchecked"")
+static <E> Closure<E>[] copy(final Closure<? super E>... closures) {
+if (closures == null) {
+return null;
+}
+return (Closure<E>[]) closures.clone();
+}",0
+10,private final Predicate<? super E> iPredicate;,0
+11,private final Predicate<? super T> iPredicate;,0
+12,private final Predicate<? super I>[] iPredicates;,0
+13,"private final Transformer<? super E, ?> iTransformer;",0
+14,"private final Transformer<? super T, Boolean> iTransformer;",0
+15,"public E[] getArray() {
+return this.array;
+}",0
+16,"public ObjectArrayIterator(final E[] array, final int start, final int end) {
+super();
+if (start < 0) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be less than zero"");
+}
+if (end > array.length) {
+throw new ArrayIndexOutOfBoundsException(""End index must not be greater than the array length"");
+}
+if (start > array.length) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be greater than the array length"");
+}
+if (end < start) {
+throw new IllegalArgumentException(""End index must not be less than start index"");
+}
+this.array = array;
+this.startIndex = start;
+this.endIndex = end;
+this.index = start;
+}",0
+17,"@Override
+protected List<E> decorated() {
+return (List<E>) super.decorated();
+}",0
+18,"@Override
+protected List<E> decorated() {
+return (List<E>) super.decorated();
+}",0
+19,"protected List<E> getList() {
+return (List<E>) decorated();
+}",0
+20,"private AVLNode<E> removeSelf() {
+if (getRightSubTree() == null && getLeftSubTree() == null) {
+return null;
+}
+if (getRightSubTree() == null) {
+if (relativePosition > 0) {
+left.relativePosition += relativePosition + (relativePosition > 0 ? 0 : 1);
+}
+left.max().setRight(null, right);
+return left;
+}
+if (getLeftSubTree() == null) {
+right.relativePosition += relativePosition - (relativePosition < 0 ? 0 : 1);
+right.min().setLeft(null, left);
+return right;
+}
+if (heightRightMinusLeft() > 0) {
+final AVLNode<E> rightMin = right.min();
+value = rightMin.value;
+if (leftIsPrevious) {
+left = rightMin.left;
+}
+right = right.removeMin();
+if (relativePosition < 0) {
+relativePosition++;
+}
+} else {
+final AVLNode<E> leftMax = left.max();
+value = leftMax.value;
+if (rightIsNext) {
+right = leftMax.right;
+}
+final AVLNode<E> leftPrevious = left.left;
+left = left.removeMax();
+if (left == null) {
+left = leftPrevious;
+leftIsPrevious = true;
+}
+if (relativePosition > 0) {
+relativePosition--;
+}
+}
+recalcHeight();
+return this;
+}",0
+21,"@Override
+protected LinkEntry<K, V> getEntry(final Object key) {
+return (LinkEntry<K, V>) super.getEntry(key);
+}",0
+22,"@Override
+public int hashCode() {
+return hash;
+}",0
+23,"protected ReferenceEntry<K, V> nextEntry() {
+checkMod();
+if (nextNull() && !hasNext()) {
+throw new NoSuchElementException();
+}
+previous = entry;
+entry = entry.next();
+currentKey = nextKey;
+currentValue = nextValue;
+nextKey = null;
+nextValue = null;
+return previous;
+}",0
+24,"V currentValue, nextValue;",0
+25,"@Override
+public int hashCode() {
+if (delegateMap != null) {
+return delegateMap.hashCode();
+}
+int total = 0;
+switch(size) {
+case 3:
+total += hash3 ^ (value3 == null ? 0 : value3.hashCode());
+case 2:
+total += hash2 ^ (value2 == null ? 0 : value2.hashCode());
+case 1:
+total += hash1 ^ (value1 == null ? 0 : value1.hashCode());
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+return total;
+}",0
+26,"@Override
+public String toString() {
+if (delegateMap != null) {
+return delegateMap.toString();
+}
+if (size == 0) {
+return ""{}"";
+}
+final StringBuilder buf = new StringBuilder(128);
+buf.append('{');
+switch(size) {
+case 3:
+buf.append(key3 == this ? ""(this Map)"" : key3);
+buf.append('=');
+buf.append(value3 == this ? ""(this Map)"" : value3);
+buf.append(',');
+case 2:
+buf.append(key2 == this ? ""(this Map)"" : key2);
+buf.append('=');
+buf.append(value2 == this ? ""(this Map)"" : value2);
+buf.append(',');
+case 1:
+buf.append(key1 == this ? ""(this Map)"" : key1);
+buf.append('=');
+buf.append(value1 == this ? ""(this Map)"" : value1);
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+buf.append('}');
+return buf.toString();
+}",0
+27,"private void convertToMap() {
+delegateMap = createDelegateMap();
+switch(size) {
+case 3:
+delegateMap.put(key3, value3);
+case 2:
+delegateMap.put(key2, value2);
+case 1:
+delegateMap.put(key1, value1);
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+size = 0;
+hash1 = hash2 = hash3 = 0;
+key1 = key2 = key3 = null;
+value1 = value2 = value3 = null;
+}",0
+28,"private final Transformer<? super K, ? extends K> keyTransformer;",0
+29,"@Override
+protected Set<E> decorated() {
+return (Set<E>) super.decorated();
+}",0
+30,"protected SortedSet<E> getSortedSet() {
+return (SortedSet<E>) decorated();
+}",0
+31,"@Override
+public Set<E> uniqueSet() {
+synchronized (lock) {
+final Set<E> set = getBag().uniqueSet();
+return new SynchronizedBagSet(set, lock);
+}
+}",0
+32,"private void writeObject(final ObjectOutputStream out) throws IOException {
+out.defaultWriteObject();
+out.writeObject(comparator());
+super.doWriteObject(out);
+}",0
+33,"@Override
+public void remove() {
+iterator.remove();
+parent.remove(last.getKey());
+last = null;
+}",0
+34,"@Override
+public boolean equals(final Object obj) {
+return TreeBidiMap.this.doEquals(obj, DataElement.VALUE);
+}",0
+35,"private UnmodifiableBidiMap<V, K> inverse;",0
+36,"boolean add(long bits) {
+if (size == data.length) {
+data = Arrays.copyOf(data, size * 2);
+}
+data[size++] = bits;
+return true;
+}",0
+37,"private IndexFilter(Shape shape, IntPredicate consumer) {
+this.size = shape.getNumberOfBits();
+this.consumer = consumer;
+if (BitMap.numberOfBitMaps(shape.getNumberOfBits()) * Long.BYTES < (long) shape.getNumberOfHashFunctions() * Integer.BYTES) {
+this.tracker = new BitMapTracker(shape);
+} else {
+this.tracker = new ArrayTracker(shape);
+}
+}",0
+38,private final List<Comparator<E>> comparatorChain;,0
+39,private final Comparator<? super E> nonNullComparator;,0
+40,private final Comparator<O> decorated;,0
+41,"private final Transformer<? super T, ? extends T>[] iTransformers;",0
+42,private final Comparator<T> comparator;,0
+43,private final Equator<T> equator;,0
+44,"@SuppressWarnings(""unchecked"")
+static <T> Predicate<T>[] copy(final Predicate<? super T>... predicates) {
+if (predicates == null) {
+return null;
+}
+return (Predicate<T>[]) predicates.clone();
+}",0
+45,"@SuppressWarnings(""unchecked"")
+static <I, O> Transformer<I, O>[] copy(final Transformer<? super I, ? extends O>... transformers) {
+if (transformers == null) {
+return null;
+}
+return (Transformer<I, O>[]) transformers.clone();
+}",0
+46,private final Closure<? super E> iFalseClosure;,0
+47,private final Predicate<? super T> iPredicate;,0
+48,private final Predicate<? super T> iPredicate;,0
+49,private final Predicate<? super T> iPredicate2;,0
+50,private final Predicate<? super T> iPredicate;,0
+51,private final Predicate<? super T> iPredicate;,0
+52,"private final Transformer<? super E, ?> iTransformer;",0
+53,"public ObjectArrayIterator(final E[] array, final int start, final int end) {
+if (start < 0) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be less than zero"");
+}
+if (end > array.length) {
+throw new ArrayIndexOutOfBoundsException(""End index must not be greater than the array length"");
+}
+if (start > array.length) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be greater than the array length"");
+}
+if (end < start) {
+throw new IllegalArgumentException(""End index must not be less than start index"");
+}
+this.array = array;
+this.startIndex = start;
+this.endIndex = end;
+this.index = start;
+}",0
+54,private final Factory<? extends E> factory;,0
+55,"protected List<E> getList() {
+return (List<E>) decorated();
+}",0
+56,"@Override
+protected LinkEntry<K, V> getEntry(final Object key) {
+return (LinkEntry<K, V>) super.getEntry(key);
+}",0
+57,"@Override
+protected void removeEntry(final HashEntry<K, V> entry, final int hashIndex, final HashEntry<K, V> previous) {
+final LinkEntry<K, V> link = (LinkEntry<K, V>) entry;
+link.before.after = link.after;
+link.after.before = link.before;
+link.after = null;
+link.before = null;
+super.removeEntry(entry, hashIndex, previous);
+}",0
+58,"@Override
+public int hashCode() {
+return hash;
+}",0
+59,"V currentValue, nextValue;",0
+60,"private void convertToMap() {
+delegateMap = createDelegateMap();
+switch(size) {
+case 3:
+delegateMap.put(key3, value3);
+case 2:
+delegateMap.put(key2, value2);
+case 1:
+delegateMap.put(key1, value1);
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+size = 0;
+hash1 = hash2 = hash3 = 0;
+key1 = key2 = key3 = null;
+value1 = value2 = value3 = null;
+}",0
+61,"@Override
+public String toString() {
+if (delegateMap != null) {
+return delegateMap.toString();
+}
+if (size == 0) {
+return ""{}"";
+}
+final StringBuilder buf = new StringBuilder(128);
+buf.append('{');
+switch(size) {
+case 3:
+buf.append(key3 == this ? ""(this Map)"" : key3);
+buf.append('=');
+buf.append(value3 == this ? ""(this Map)"" : value3);
+buf.append(CollectionUtils.COMMA);
+case 2:
+buf.append(key2 == this ? ""(this Map)"" : key2);
+buf.append('=');
+buf.append(value2 == this ? ""(this Map)"" : value2);
+buf.append(CollectionUtils.COMMA);
+case 1:
+buf.append(key1 == this ? ""(this Map)"" : key1);
+buf.append('=');
+buf.append(value1 == this ? ""(this Map)"" : value1);
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+buf.append('}');
+return buf.toString();
+}",0
+62,"@Override
+public int hashCode() {
+if (delegateMap != null) {
+return delegateMap.hashCode();
+}
+int total = 0;
+switch(size) {
+case 3:
+total += hash3 ^ (value3 == null ? 0 : value3.hashCode());
+case 2:
+total += hash2 ^ (value2 == null ? 0 : value2.hashCode());
+case 1:
+total += hash1 ^ (value1 == null ? 0 : value1.hashCode());
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+return total;
+}",0
+63,"@Override
+public int hashCode() {
+final Set<V> set = (Set<V>) getMapping();
+return SetUtils.hashCodeForSet(set);
+}",0
+64,"public void trimToSize() {
+for (final Collection<V> coll : getMap().values()) {
+final ArrayList<V> list = (ArrayList<V>) coll;
+list.trimToSize();
+}
+}",0
+65,"private final Transformer<? super K, ? extends K> keyTransformer;",0
+66,protected final AbstractMapMultiSet<E> parent;,0
+67,"@Override
+protected Set<E> decorated() {
+return (Set<E>) super.decorated();
+}",0
+68,"protected SortedSet<E> getSortedSet() {
+return (SortedSet<E>) decorated();
+}",0
+69,"@Override
+public void clear() {
+final Iterator<Map.Entry<K, V>> it = AbstractPatriciaTrie.this.entrySet().iterator();
+final Set<K> currentKeys = keySet();
+while (it.hasNext()) {
+if (currentKeys.contains(it.next().getKey())) {
+it.remove();
+}
+}
+}",0
+70,"@Override
+public List<T> get(final int index) {
+final int listSize = size();
+if (listSize < 0) {
+throw new IllegalArgumentException(""negative size: "" + listSize);
+}
+if (index < 0) {
+throw new IndexOutOfBoundsException(""Index "" + index + "" must not be negative"");
+}
+if (index >= listSize) {
+throw new IndexOutOfBoundsException(""Index "" + index + "" must be less than size "" + listSize);
+}
+final int start = index * size;
+final int end = Math.min(start + size, list.size());
+return list.subList(start, end);
+}",0
+71,"@SuppressWarnings(""unchecked"")
+public static <K, V> Map<K, V> putAll(final Map<K, V> map, final Object[] array) {
+map.size();
+if (array == null || array.length == 0) {
+return map;
+}
+final Object obj = array[0];
+if (obj instanceof Map.Entry) {
+for (final Object element : array) {
+final Map.Entry<K, V> entry = (Map.Entry<K, V>) element;
+map.put(entry.getKey(), entry.getValue());
+}
+} else if (obj instanceof KeyValue) {
+for (final Object element : array) {
+final KeyValue<K, V> keyval = (KeyValue<K, V>) element;
+map.put(keyval.getKey(), keyval.getValue());
+}
+} else if (obj instanceof Object[]) {
+for (int i = 0; i < array.length; i++) {
+final Object[] sub = (Object[]) array[i];
+if (sub == null || sub.length < 2) {
+throw new IllegalArgumentException(""Invalid array element: "" + i);
+}
+map.put((K) sub[0], (V) sub[1]);
+}
+} else {
+for (int i = 0; i < array.length - 1; ) {
+map.put((K) array[i++], (V) array[i++]);
+}
+}
+return map;
+}",0
+72,"private void writeObject(final ObjectOutputStream out) throws IOException {
+out.defaultWriteObject();
+out.writeObject(comparator());
+super.doWriteObject(out);
+}",0
+73,"@Override
+public boolean equals(final Object obj) {
+return this.doEquals(obj, KEY);
+}",0
+74,"private UnmodifiableBidiMap<V, K> inverse;",0
+75,"protected final Transformer<? super E, ? extends E> transformer;",0
+76,private final List<Comparator<E>> comparatorChain;,0
+77,"private final Transformer<? super T, ? extends T>[] iTransformers;",0
+78,private final Comparator<T> comparator;,0
+79,"@SuppressWarnings(""unchecked"")
+static <E> Closure<E>[] copy(final Closure<? super E>... closures) {
+if (closures == null) {
+return null;
+}
+return (Closure<E>[]) closures.clone();
+}",0
+80,private transient Method iCloneMethod;,0
+81,"private final Transformer<? super T, ? extends T> iTransformer;",0
+82,"private final Transformer<? super T, Boolean> iTransformer;",0
+83,"public ObjectArrayIterator(final E[] array, final int start, final int end) {
+super();
+if (start < 0) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be less than zero"");
+}
+if (end > array.length) {
+throw new ArrayIndexOutOfBoundsException(""End index must not be greater than the array length"");
+}
+if (start > array.length) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be greater than the array length"");
+}
+if (end < start) {
+throw new IllegalArgumentException(""End index must not be less than start index"");
+}
+this.array = array;
+this.startIndex = start;
+this.endIndex = end;
+this.index = start;
+}",0
+84,"public MultiKey(final K[] keys, final boolean makeClone) {
+super();
+if (keys == null) {
+throw new IllegalArgumentException(""The array of keys must not be null"");
+}
+if (makeClone) {
+this.keys = keys.clone();
+} else {
+this.keys = keys;
+}
+calculateHashCode(keys);
+}",0
+85,"private AVLNode<E> removeSelf() {
+if (getRightSubTree() == null && getLeftSubTree() == null) {
+return null;
+}
+if (getRightSubTree() == null) {
+if (relativePosition > 0) {
+left.relativePosition += relativePosition + (relativePosition > 0 ? 0 : 1);
+}
+left.max().setRight(null, right);
+return left;
+}
+if (getLeftSubTree() == null) {
+right.relativePosition += relativePosition - (relativePosition < 0 ? 0 : 1);
+right.min().setLeft(null, left);
+return right;
+}
+if (heightRightMinusLeft() > 0) {
+final AVLNode<E> rightMin = right.min();
+value = rightMin.value;
+if (leftIsPrevious) {
+left = rightMin.left;
+}
+right = right.removeMin();
+if (relativePosition < 0) {
+relativePosition++;
+}
+} else {
+final AVLNode<E> leftMax = left.max();
+value = leftMax.value;
+if (rightIsNext) {
+right = leftMax.right;
+}
+final AVLNode<E> leftPrevious = left.left;
+left = left.removeMax();
+if (left == null) {
+left = leftPrevious;
+leftIsPrevious = true;
+}
+if (relativePosition > 0) {
+relativePosition--;
+}
+}
+recalcHeight();
+return this;
+}",0
+86,"@Override
+protected void addEntry(final HashEntry<K, V> entry, final int hashIndex) {
+final LinkEntry<K, V> link = (LinkEntry<K, V>) entry;
+link.after = header;
+link.before = header.before;
+header.before.after = link;
+header.before = link;
+data[hashIndex] = link;
+}",0
+87,"@Override
+protected void removeEntry(final HashEntry<K, V> entry, final int hashIndex, final HashEntry<K, V> previous) {
+final LinkEntry<K, V> link = (LinkEntry<K, V>) entry;
+link.before.after = link.after;
+link.after.before = link.before;
+link.after = null;
+link.before = null;
+super.removeEntry(entry, hashIndex, previous);
+}",0
+88,"protected ReferenceEntry<K, V> nextEntry() {
+checkMod();
+if (nextNull() && !hasNext()) {
+throw new NoSuchElementException();
+}
+previous = entry;
+entry = entry.next();
+currentKey = nextKey;
+currentValue = nextValue;
+nextKey = null;
+nextValue = null;
+return previous;
+}",0
+89,"@Override
+public int hashCode() {
+return hash;
+}",0
+90,"@Override
+public String toString() {
+if (delegateMap != null) {
+return delegateMap.toString();
+}
+if (size == 0) {
+return ""{}"";
+}
+final StringBuilder buf = new StringBuilder(128);
+buf.append('{');
+switch(size) {
+case 3:
+buf.append(key3 == this ? ""(this Map)"" : key3);
+buf.append('=');
+buf.append(value3 == this ? ""(this Map)"" : value3);
+buf.append(',');
+case 2:
+buf.append(key2 == this ? ""(this Map)"" : key2);
+buf.append('=');
+buf.append(value2 == this ? ""(this Map)"" : value2);
+buf.append(',');
+case 1:
+buf.append(key1 == this ? ""(this Map)"" : key1);
+buf.append('=');
+buf.append(value1 == this ? ""(this Map)"" : value1);
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+buf.append('}');
+return buf.toString();
+}",0
+91,"private void convertToMap() {
+delegateMap = createDelegateMap();
+switch(size) {
+case 3:
+delegateMap.put(key3, value3);
+case 2:
+delegateMap.put(key2, value2);
+case 1:
+delegateMap.put(key1, value1);
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+size = 0;
+hash1 = hash2 = hash3 = 0;
+key1 = key2 = key3 = null;
+value1 = value2 = value3 = null;
+}",0
+92,"@Override
+public int hashCode() {
+if (delegateMap != null) {
+return delegateMap.hashCode();
+}
+int total = 0;
+switch(size) {
+case 3:
+total += hash3 ^ (value3 == null ? 0 : value3.hashCode());
+case 2:
+total += hash2 ^ (value2 == null ? 0 : value2.hashCode());
+case 1:
+total += hash1 ^ (value1 == null ? 0 : value1.hashCode());
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+return total;
+}",0
+93,"@Override
+protected void updateEntry(final HashEntry<K, V> entry, final V newValue) {
+moveToMRU((LinkEntry<K, V>) entry);
+entry.setValue(newValue);
+}",0
+94,"protected SortedSet<E> getSortedSet() {
+return (SortedSet<E>) decorated();
+}",0
+95,"@Override
+public boolean equals(final Object object) {
+if (object == this) {
+return true;
+}
+synchronized (lock) {
+return getBag().equals(object);
+}
+}",0
+96,"private final Transformer<C, K> keyTransformer;",0
+97,private final Predicate<? super T> iPredicate2;,0
+98,private final Closure<? super T> iClosure;,0
+99,private final Factory<? extends O> iFactory;,0
+100,"@SuppressWarnings(""unchecked"")
+static <E> Closure<E>[] copy(final Closure<? super E>... closures) {
+if (closures == null) {
+return null;
+}
+return (Closure<E>[]) closures.clone();
+}",0
+101,"@SuppressWarnings(""unchecked"")
+static <I, O> Transformer<I, O>[] copy(final Transformer<? super I, ? extends O>... transformers) {
+if (transformers == null) {
+return null;
+}
+return (Transformer<I, O>[]) transformers.clone();
+}",0
+102,private final Closure<? super E> iFalseClosure;,0
+103,private final Predicate<? super T> iPredicate;,0
+104,private final Predicate<? super T> iPredicate;,0
+105,private final Predicate<? super T> iPredicate;,0
+106,private final Predicate<? super T> iPredicate2;,0
+107,private final Closure<? super E> iDefault;,0
+108,"private final Transformer<? super T, ? extends T> iTransformer;",0
+109,"public MultiKey(final K[] keys, final boolean makeClone) {
+super();
+if (keys == null) {
+throw new IllegalArgumentException(""The array of keys must not be null"");
+}
+if (makeClone) {
+this.keys = keys.clone();
+} else {
+this.keys = keys;
+}
+calculateHashCode(keys);
+}",0
+110,"private AVLNode<E> removeSelf() {
+if (getRightSubTree() == null && getLeftSubTree() == null) {
+return null;
+}
+if (getRightSubTree() == null) {
+if (relativePosition > 0) {
+left.relativePosition += relativePosition + (relativePosition > 0 ? 0 : 1);
+}
+left.max().setRight(null, right);
+return left;
+}
+if (getLeftSubTree() == null) {
+right.relativePosition += relativePosition - (relativePosition < 0 ? 0 : 1);
+right.min().setLeft(null, left);
+return right;
+}
+if (heightRightMinusLeft() > 0) {
+final AVLNode<E> rightMin = right.min();
+value = rightMin.value;
+if (leftIsPrevious) {
+left = rightMin.left;
+}
+right = right.removeMin();
+if (relativePosition < 0) {
+relativePosition++;
+}
+} else {
+final AVLNode<E> leftMax = left.max();
+value = leftMax.value;
+if (rightIsNext) {
+right = leftMax.right;
+}
+final AVLNode<E> leftPrevious = left.left;
+left = left.removeMax();
+if (left == null) {
+left = leftPrevious;
+leftIsPrevious = true;
+}
+if (relativePosition > 0) {
+relativePosition--;
+}
+}
+recalcHeight();
+return this;
+}",0
+111,"@Override
+protected LinkEntry<K, V> getEntry(final Object key) {
+return (LinkEntry<K, V>) super.getEntry(key);
+}",0
+112,"@Override
+protected void addEntry(final HashEntry<K, V> entry, final int hashIndex) {
+final LinkEntry<K, V> link = (LinkEntry<K, V>) entry;
+link.after = header;
+link.before = header.before;
+header.before.after = link;
+header.before = link;
+data[hashIndex] = link;
+}",0
+113,"protected void purge(final Reference<?> ref) {
+final int hash = ref.hashCode();
+final int index = hashIndex(hash, data.length);
+HashEntry<K, V> previous = null;
+HashEntry<K, V> entry = data[index];
+while (entry != null) {
+if (((ReferenceEntry<K, V>) entry).purge(ref)) {
+if (previous == null) {
+data[index] = entry.next;
+} else {
+previous.next = entry.next;
+}
+this.size--;
+return;
+}
+previous = entry;
+entry = entry.next;
+}
+}",0
+114,"@Override
+public int hashCode() {
+return hash;
+}",0
+115,"@Override
+public int hashCode() {
+return hash;
+}",0
+116,"protected ReferenceEntry<K, V> nextEntry() {
+checkMod();
+if (nextNull() && !hasNext()) {
+throw new NoSuchElementException();
+}
+previous = entry;
+entry = entry.next();
+currentKey = nextKey;
+currentValue = nextValue;
+nextKey = null;
+nextValue = null;
+return previous;
+}",0
+117,"V currentValue, nextValue;",0
+118,"@Override
+public int hashCode() {
+if (delegateMap != null) {
+return delegateMap.hashCode();
+}
+int total = 0;
+switch(size) {
+case 3:
+total += hash3 ^ (value3 == null ? 0 : value3.hashCode());
+case 2:
+total += hash2 ^ (value2 == null ? 0 : value2.hashCode());
+case 1:
+total += hash1 ^ (value1 == null ? 0 : value1.hashCode());
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+return total;
+}",0
+119,"protected Node<K, V> next;",0
+120,"@Override
+public boolean equals(Object other) {
+final Set<V> set = (Set<V>) getMapping();
+if (set == null) {
+return Collections.emptySet().equals(other);
+}
+if (!(other instanceof Set)) {
+return false;
+}
+Set<?> otherSet = (Set<?>) other;
+return SetUtils.isEqualSet(set, otherSet);
+}",0
+121,"public void trimToSize() {
+for (Collection<V> coll : getMap().values()) {
+final ArrayList<V> list = (ArrayList<V>) coll;
+list.trimToSize();
+}
+}",0
+122,"private final Transformer<? super K, ? extends K> keyTransformer;",0
+123,"@SuppressWarnings(""unchecked"")
+public static <K, V> UnmodifiableMultiValuedMap<K, V> unmodifiableMultiValuedMap(MultiValuedMap<? extends K, ? extends V> map) {
+if (map instanceof Unmodifiable) {
+return (UnmodifiableMultiValuedMap<K, V>) map;
+}
+return new UnmodifiableMultiValuedMap<K, V>(map);
+}",0
+124,protected final AbstractMapMultiSet<E> parent;,0
+125,"@Override
+protected Set<E> decorated() {
+return (Set<E>) super.decorated();
+}",0
+126,"@Override
+public List<T> get(final int index) {
+final int listSize = size();
+if (listSize < 0) {
+throw new IllegalArgumentException(""negative size: "" + listSize);
+}
+if (index < 0) {
+throw new IndexOutOfBoundsException(""Index "" + index + "" must not be negative"");
+}
+if (index >= listSize) {
+throw new IndexOutOfBoundsException(""Index "" + index + "" must be less than size "" + listSize);
+}
+final int start = index * size;
+final int end = Math.min(start + size, list.size());
+return list.subList(start, end);
+}",0
+127,"@Override
+public boolean equals(final Object obj) {
+return this.doEquals(obj, KEY);
+}",0
+128,"private final Transformer<? super I, ? extends O> transformer;",0
+129,"private final Transformer<? super T, ? extends T>[] iTransformers;",0
+130,"@SuppressWarnings(""unchecked"")
+static <E> Closure<E>[] copy(final Closure<? super E>... closures) {
+if (closures == null) {
+return null;
+}
+return (Closure<E>[]) closures.clone();
+}",0
+131,"private final Transformer<? super T, ? extends T> iTransformer;",0
+132,"private final Transformer<? super T, Boolean> iTransformer;",0
+133,"@Override
+protected List<E> decorated() {
+return (List<E>) super.decorated();
+}",0
+134,"@Override
+protected List<E> decorated() {
+return (List<E>) super.decorated();
+}",0
+135,"protected List<E> getList() {
+return (List<E>) decorated();
+}",0
+136,"private AVLNode<E> removeSelf() {
+if (getRightSubTree() == null && getLeftSubTree() == null) {
+return null;
+}
+if (getRightSubTree() == null) {
+if (relativePosition > 0) {
+left.relativePosition += relativePosition + (relativePosition > 0 ? 0 : 1);
+}
+left.max().setRight(null, right);
+return left;
+}
+if (getLeftSubTree() == null) {
+right.relativePosition += relativePosition - (relativePosition < 0 ? 0 : 1);
+right.min().setLeft(null, left);
+return right;
+}
+if (heightRightMinusLeft() > 0) {
+final AVLNode<E> rightMin = right.min();
+value = rightMin.value;
+if (leftIsPrevious) {
+left = rightMin.left;
+}
+right = right.removeMin();
+if (relativePosition < 0) {
+relativePosition++;
+}
+} else {
+final AVLNode<E> leftMax = left.max();
+value = leftMax.value;
+if (rightIsNext) {
+right = leftMax.right;
+}
+final AVLNode<E> leftPrevious = left.left;
+left = left.removeMax();
+if (left == null) {
+left = leftPrevious;
+leftIsPrevious = true;
+}
+if (relativePosition > 0) {
+relativePosition--;
+}
+}
+recalcHeight();
+return this;
+}",0
+137,"@Override
+protected void removeEntry(final HashEntry<K, V> entry, final int hashIndex, final HashEntry<K, V> previous) {
+final LinkEntry<K, V> link = (LinkEntry<K, V>) entry;
+link.before.after = link.after;
+link.after.before = link.before;
+link.after = null;
+link.before = null;
+super.removeEntry(entry, hashIndex, previous);
+}",0
+138,"@Override
+public int hashCode() {
+return hash;
+}",0
+139,"protected ReferenceEntry<K, V> nextEntry() {
+checkMod();
+if (nextNull() && !hasNext()) {
+throw new NoSuchElementException();
+}
+previous = entry;
+entry = entry.next();
+currentKey = nextKey;
+currentValue = nextValue;
+nextKey = null;
+nextValue = null;
+return previous;
+}",0
+140,"@Override
+public int hashCode() {
+return hash;
+}",0
+141,"V currentValue, nextValue;",0
+142,"protected void purge(final Reference<?> ref) {
+final int hash = ref.hashCode();
+final int index = hashIndex(hash, data.length);
+HashEntry<K, V> previous = null;
+HashEntry<K, V> entry = data[index];
+while (entry != null) {
+if (((ReferenceEntry<K, V>) entry).purge(ref)) {
+if (previous == null) {
+data[index] = entry.next;
+} else {
+previous.next = entry.next;
+}
+this.size--;
+return;
+}
+previous = entry;
+entry = entry.next;
+}
+}",0
+143,"@Override
+public int hashCode() {
+if (delegateMap != null) {
+return delegateMap.hashCode();
+}
+int total = 0;
+switch(size) {
+case 3:
+total += hash3 ^ (value3 == null ? 0 : value3.hashCode());
+case 2:
+total += hash2 ^ (value2 == null ? 0 : value2.hashCode());
+case 1:
+total += hash1 ^ (value1 == null ? 0 : value1.hashCode());
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+return total;
+}",0
+144,"private void convertToMap() {
+delegateMap = createDelegateMap();
+switch(size) {
+case 3:
+delegateMap.put(key3, value3);
+case 2:
+delegateMap.put(key2, value2);
+case 1:
+delegateMap.put(key1, value1);
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+size = 0;
+hash1 = hash2 = hash3 = 0;
+key1 = key2 = key3 = null;
+value1 = value2 = value3 = null;
+}",0
+145,"@Override
+protected void updateEntry(final HashEntry<K, V> entry, final V newValue) {
+moveToMRU((LinkEntry<K, V>) entry);
+entry.setValue(newValue);
+}",0
+146,protected K key;,0
+147,"public V remove(int index) {
+final List<V> list = ListUtils.emptyIfNull((List<V>) getMapping());
+V value = list.remove(index);
+if (list.isEmpty()) {
+AbstractListValuedMap.this.remove(key);
+}
+return value;
+}",0
+148,"@SuppressWarnings(""unchecked"")
+public boolean addAll(int index, Collection<? extends V> c) {
+List<V> list = (List<V>) getMapping();
+if (list == null) {
+list = (List<V>) createCollection();
+boolean result = list.addAll(index, c);
+if (result) {
+getMap().put((K) key, list);
+}
+return result;
+}
+return list.addAll(index, c);
+}",0
+149,"@Override
+public int hashCode() {
+int h = 0;
+Iterator<Entry<K, Collection<V>>> it = getMap().entrySet().iterator();
+while (it.hasNext()) {
+Entry<K, Collection<V>> entry = it.next();
+K key = entry.getKey();
+List<V> valueList = (List<V>) entry.getValue();
+h += (key == null ? 0 : key.hashCode()) ^ ListUtils.hashCodeForList(valueList);
+}
+return h;
+}",0
+150,"@SuppressWarnings(""unchecked"")
+public void add(int index, V value) {
+List<V> list = (List<V>) getMapping();
+if (list == null) {
+list = (List<V>) AbstractListValuedMap.this.createCollection();
+list.add(index, value);
+getMap().put((K) key, list);
+}
+list.add(index, value);
+}",0
+151,"@SuppressWarnings(""unchecked"")
+public void add(V value) {
+if (getMap().get(key) == null) {
+List<V> list = (List<V>) createCollection();
+getMap().put((K) key, list);
+this.values = list;
+this.iterator = list.listIterator();
+}
+this.iterator.add(value);
+}",0
+152,"@Override
+public int hashCode() {
+final List<V> list = (List<V>) getMapping();
+if (list == null) {
+return Collections.emptyList().hashCode();
+}
+return ListUtils.hashCodeForList(list);
+}",0
+153,"public V get(int index) {
+final List<V> list = ListUtils.emptyIfNull((List<V>) getMapping());
+return list.get(index);
+}",0
+154,"@SuppressWarnings(""unchecked"")
+protected <C extends Collection<V>> AbstractMultiValuedMap(final Map<K, ? super C> map, final Class<C> collectionClazz, final int initialCollectionCapacity) {
+if (map == null) {
+throw new IllegalArgumentException(""Map must not be null"");
+}
+if (initialCollectionCapacity < 0) {
+throw new IllegalArgumentException(""Illegal Capacity: "" + initialCollectionCapacity);
+}
+this.map = (Map<K, Collection<V>>) map;
+this.collectionFactory = new InstantiateFactory<C>(collectionClazz, new Class[] { Integer.TYPE }, new Object[] { new Integer(initialCollectionCapacity) });
+}",0
+155,"@Override
+public int hashCode() {
+int h = 0;
+Iterator<Entry<K, Collection<V>>> it = getMap().entrySet().iterator();
+while (it.hasNext()) {
+Entry<K, Collection<V>> entry = it.next();
+K key = entry.getKey();
+Set<V> valueSet = (Set<V>) entry.getValue();
+h += (key == null ? 0 : key.hashCode()) ^ SetUtils.hashCodeForSet(valueSet);
+}
+return h;
+}",0
+156,"@Override
+public int hashCode() {
+final Set<V> set = (Set<V>) getMapping();
+if (set == null) {
+return Collections.emptySet().hashCode();
+}
+return SetUtils.hashCodeForSet(set);
+}",0
+157,"@SuppressWarnings(""unchecked"")
+public static <K, V> UnmodifiableMultiValuedMap<K, V> unmodifiableMultiValuedMap(MultiValuedMap<? extends K, ? extends V> map) {
+if (map instanceof Unmodifiable) {
+return (UnmodifiableMultiValuedMap<K, V>) map;
+}
+return new UnmodifiableMultiValuedMap<K, V>(map);
+}",0
+158,"@Override
+protected Set<E> decorated() {
+return (Set<E>) super.decorated();
+}",0
+159,"protected SortedSet<E> getSortedSet() {
+return (SortedSet<E>) decorated();
+}",0
+160,private final Comparator<? super E> comparator;,0
+161,private final Predicate<? super T> iPredicate1;,0
+162,"@SuppressWarnings(""unchecked"")
+static <I, O> Transformer<I, O>[] copy(final Transformer<? super I, ? extends O>... transformers) {
+if (transformers == null) {
+return null;
+}
+return (Transformer<I, O>[]) transformers.clone();
+}",0
+163,"@SuppressWarnings(""unchecked"")
+static <E> Closure<E>[] copy(final Closure<? super E>... closures) {
+if (closures == null) {
+return null;
+}
+return (Closure<E>[]) closures.clone();
+}",0
+164,private final Closure<? super E> iFalseClosure;,0
+165,private final Predicate<? super T> iPredicate;,0
+166,private final Predicate<? super T> iPredicate2;,0
+167,private final Closure<? super E> iDefault;,0
+168,private final Predicate<? super T> iPredicate;,0
+169,"private final Transformer<? super E, ?> iTransformer;",0
+170,"protected List<E> getList() {
+return (List<E>) decorated();
+}",0
+171,"@Override
+public int hashCode() {
+return hash;
+}",0
+172,protected V value;,0
+173,"@Override
+public boolean equals(final Object other) {
+final Set<V> set = (Set<V>) getMapping();
+if (set == null) {
+return Collections.emptySet().equals(other);
+}
+if (!(other instanceof Set)) {
+return false;
+}
+final Set<?> otherSet = (Set<?>) other;
+return SetUtils.isEqualSet(set, otherSet);
+}",0
+174,"public void trimToSize() {
+for (final Collection<V> coll : getMap().values()) {
+final ArrayList<V> list = (ArrayList<V>) coll;
+list.trimToSize();
+}
+}",0
+175,"private final Transformer<? super K, ? extends K> keyTransformer;",0
+176,"@Override
+public Set<E> uniqueSet() {
+synchronized (lock) {
+final Set<E> set = getBag().uniqueSet();
+return new SynchronizedBagSet(set, lock);
+}
+}",0
+177,"@Override
+public void remove() {
+if (canRemove == false) {
+throw new IllegalStateException(""Iterator remove() can only be called once after next()"");
+}
+final V value = last.getValue();
+iterator.remove();
+parent.reverseMap.remove(value);
+last = null;
+canRemove = false;
+}",0
+178,"@Override
+public void remove() {
+iterator.remove();
+parent.remove(last.getKey());
+last = null;
+}",0
+179,"@Override
+public boolean equals(final Object obj) {
+return TreeBidiMap.this.doEquals(obj, DataElement.VALUE);
+}",0
+180,private final Predicate<? super T> iPredicate2;,0
+181,private final Equator<T> equator;,0
+182,"@SuppressWarnings(""unchecked"")
+static <T> Predicate<T>[] copy(final Predicate<? super T>... predicates) {
+if (predicates == null) {
+return null;
+}
+return (Predicate<T>[]) predicates.clone();
+}",0
+183,"@SuppressWarnings(""unchecked"")
+static <E> Closure<E>[] copy(final Closure<? super E>... closures) {
+if (closures == null) {
+return null;
+}
+return (Closure<E>[]) closures.clone();
+}",0
+184,"private final Transformer<? super I, ? extends O> iTrueTransformer;",0
+185,private final Predicate<? super T> iPredicate;,0
+186,private final Predicate<? super T> iPredicate;,0
+187,private final Predicate<? super T> iPredicate;,0
+188,private final Predicate<? super T> iPredicate2;,0
+189,"private final Transformer<? super T, ? extends T> iTransformer;",0
+190,"public E[] getArray() {
+return this.array;
+}",0
+191,private final Factory<? extends E> factory;,0
+192,"@Override
+protected List<E> decorated() {
+return (List<E>) super.decorated();
+}",0
+193,"V currentValue, nextValue;",0
+194,"@Override
+public int hashCode() {
+if (delegateMap != null) {
+return delegateMap.hashCode();
+}
+int total = 0;
+switch(size) {
+case 3:
+total += hash3 ^ (value3 == null ? 0 : value3.hashCode());
+case 2:
+total += hash2 ^ (value2 == null ? 0 : value2.hashCode());
+case 1:
+total += hash1 ^ (value1 == null ? 0 : value1.hashCode());
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+return total;
+}",0
+195,protected K key;,0
+196,"@Override
+public boolean equals(final Object other) {
+final Set<V> set = (Set<V>) getMapping();
+if (set == null) {
+return Collections.emptySet().equals(other);
+}
+if (!(other instanceof Set)) {
+return false;
+}
+final Set<?> otherSet = (Set<?>) other;
+return SetUtils.isEqualSet(set, otherSet);
+}",0
+197,"public void trimToSize() {
+for (final Collection<V> coll : getMap().values()) {
+final ArrayList<V> list = (ArrayList<V>) coll;
+list.trimToSize();
+}
+}",0
+198,"@SuppressWarnings(""unchecked"")
+public static <K, V> UnmodifiableMultiValuedMap<K, V> unmodifiableMultiValuedMap(final MultiValuedMap<? extends K, ? extends V> map) {
+if (map instanceof Unmodifiable) {
+return (UnmodifiableMultiValuedMap<K, V>) map;
+}
+return new UnmodifiableMultiValuedMap<>(map);
+}",0
+199,protected final AbstractMapMultiSet<E> parent;,0
+200,"@Override
+public String getProperty(final String key, final String defaultValue) {
+return defaultValue;
+}",0
+201,"@Override
+protected Set<E> decorated() {
+return (Set<E>) super.decorated();
+}",0
+202,"protected SortedSet<E> getSortedSet() {
+return (SortedSet<E>) decorated();
+}",0
+203,"@Override
+public List<T> get(final int index) {
+final int listSize = size();
+if (listSize < 0) {
+throw new IllegalArgumentException(""negative size: "" + listSize);
+}
+if (index < 0) {
+throw new IndexOutOfBoundsException(""Index "" + index + "" must not be negative"");
+}
+if (index >= listSize) {
+throw new IndexOutOfBoundsException(""Index "" + index + "" must be less than size "" + listSize);
+}
+final int start = index * size;
+final int end = Math.min(start + size, list.size());
+return list.subList(start, end);
+}",0
+204,"@Override
+public boolean equals(final Object object) {
+if (object == this) {
+return true;
+}
+synchronized (lock) {
+return getBag().equals(object);
+}
+}",0
+205,"@Override
+public boolean equals(final Object obj) {
+return TreeBidiMap.this.doEquals(obj, DataElement.VALUE);
+}",0
+206,"private UnmodifiableBidiMap<V, K> inverse;",0
+207,"protected final Transformer<? super E, ? extends E> transformer;",0
+208,"private final Transformer<? super I, ? extends O> transformer;",0
+209,"@SuppressWarnings(""unchecked"")
+static <T> Predicate<T>[] copy(final Predicate<? super T>... predicates) {
+if (predicates == null) {
+return null;
+}
+return (Predicate<T>[]) predicates.clone();
+}",0
+210,"@SuppressWarnings(""unchecked"")
+static <E> Closure<E>[] copy(final Closure<? super E>... closures) {
+if (closures == null) {
+return null;
+}
+return (Closure<E>[]) closures.clone();
+}",0
+211,private transient Method iCloneMethod;,0
+212,"private final Transformer<? super I, ? extends O>[] iTransformers;",0
+213,"private final Transformer<? super E, ?> iTransformer;",0
+214,"public E[] getArray() {
+return this.array;
+}",0
+215,"public ObjectArrayIterator(final E[] array, final int start, final int end) {
+super();
+if (start < 0) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be less than zero"");
+}
+if (end > array.length) {
+throw new ArrayIndexOutOfBoundsException(""End index must not be greater than the array length"");
+}
+if (start > array.length) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be greater than the array length"");
+}
+if (end < start) {
+throw new IllegalArgumentException(""End index must not be less than start index"");
+}
+this.array = array;
+this.startIndex = start;
+this.endIndex = end;
+this.index = start;
+}",0
+216,"protected List<E> getList() {
+return (List<E>) decorated();
+}",0
+217,"@Override
+protected void removeEntry(final HashEntry<K, V> entry, final int hashIndex, final HashEntry<K, V> previous) {
+final LinkEntry<K, V> link = (LinkEntry<K, V>) entry;
+link.before.after = link.after;
+link.after.before = link.before;
+link.after = null;
+link.before = null;
+super.removeEntry(entry, hashIndex, previous);
+}",0
+218,"@Override
+protected void addEntry(final HashEntry<K, V> entry, final int hashIndex) {
+final LinkEntry<K, V> link = (LinkEntry<K, V>) entry;
+link.after = header;
+link.before = header.before;
+header.before.after = link;
+header.before = link;
+data[hashIndex] = link;
+}",0
+219,"protected ReferenceEntry<K, V> nextEntry() {
+checkMod();
+if (nextNull() && !hasNext()) {
+throw new NoSuchElementException();
+}
+previous = entry;
+entry = entry.next();
+currentKey = nextKey;
+currentValue = nextValue;
+nextKey = null;
+nextValue = null;
+return previous;
+}",0
+220,"V currentValue, nextValue;",0
+221,"@Override
+public int hashCode() {
+return hash;
+}",0
+222,"@Override
+public String toString() {
+if (delegateMap != null) {
+return delegateMap.toString();
+}
+if (size == 0) {
+return ""{}"";
+}
+final StringBuilder buf = new StringBuilder(128);
+buf.append('{');
+switch(size) {
+case 3:
+buf.append(key3 == this ? ""(this Map)"" : key3);
+buf.append('=');
+buf.append(value3 == this ? ""(this Map)"" : value3);
+buf.append(',');
+case 2:
+buf.append(key2 == this ? ""(this Map)"" : key2);
+buf.append('=');
+buf.append(value2 == this ? ""(this Map)"" : value2);
+buf.append(',');
+case 1:
+buf.append(key1 == this ? ""(this Map)"" : key1);
+buf.append('=');
+buf.append(value1 == this ? ""(this Map)"" : value1);
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+buf.append('}');
+return buf.toString();
+}",0
+223,"private void convertToMap() {
+delegateMap = createDelegateMap();
+switch(size) {
+case 3:
+delegateMap.put(key3, value3);
+case 2:
+delegateMap.put(key2, value2);
+case 1:
+delegateMap.put(key1, value1);
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+size = 0;
+hash1 = hash2 = hash3 = 0;
+key1 = key2 = key3 = null;
+value1 = value2 = value3 = null;
+}",0
+224,"@Override
+protected void updateEntry(final HashEntry<K, V> entry, final V newValue) {
+moveToMRU((LinkEntry<K, V>) entry);
+entry.setValue(newValue);
+}",0
+225,protected K key;,0
+226,"public List<V> subList(int fromIndex, int toIndex) {
+final List<V> list = ListUtils.emptyIfNull((List<V>) getMapping());
+return list.subList(fromIndex, toIndex);
+}",0
+227,"public int lastIndexOf(Object o) {
+final List<V> list = ListUtils.emptyIfNull((List<V>) getMapping());
+return list.indexOf(o);
+}",0
+228,"@SuppressWarnings(""unchecked"")
+public boolean addAll(int index, Collection<? extends V> c) {
+List<V> list = (List<V>) getMapping();
+if (list == null) {
+list = (List<V>) createCollection();
+boolean result = list.addAll(index, c);
+if (result) {
+getMap().put((K) key, list);
+}
+return result;
+}
+return list.addAll(index, c);
+}",0
+229,"@SuppressWarnings(""unchecked"")
+public void add(V value) {
+if (getMap().get(key) == null) {
+List<V> list = (List<V>) createCollection();
+getMap().put((K) key, list);
+this.values = list;
+this.iterator = list.listIterator();
+}
+this.iterator.add(value);
+}",0
+230,"@Override
+public int hashCode() {
+final List<V> list = (List<V>) getMapping();
+if (list == null) {
+return Collections.emptyList().hashCode();
+}
+return ListUtils.hashCodeForList(list);
+}",0
+231,"public V remove(int index) {
+final List<V> list = ListUtils.emptyIfNull((List<V>) getMapping());
+V value = list.remove(index);
+if (list.isEmpty()) {
+AbstractListValuedMap.this.remove(key);
+}
+return value;
+}",0
+232,"@Override
+public int hashCode() {
+int h = 0;
+Iterator<Entry<K, Collection<V>>> it = getMap().entrySet().iterator();
+while (it.hasNext()) {
+Entry<K, Collection<V>> entry = it.next();
+K key = entry.getKey();
+List<V> valueList = (List<V>) entry.getValue();
+h += (key == null ? 0 : key.hashCode()) ^ ListUtils.hashCodeForList(valueList);
+}
+return h;
+}",0
+233,"@Override
+public int hashCode() {
+int h = 0;
+Iterator<Entry<K, Collection<V>>> it = getMap().entrySet().iterator();
+while (it.hasNext()) {
+Entry<K, Collection<V>> entry = it.next();
+K key = entry.getKey();
+Set<V> valueSet = (Set<V>) entry.getValue();
+h += (key == null ? 0 : key.hashCode()) ^ SetUtils.hashCodeForSet(valueSet);
+}
+return h;
+}",0
+234,"@Override
+public boolean equals(Object other) {
+final Set<V> set = (Set<V>) getMapping();
+if (set == null) {
+return Collections.emptySet().equals(other);
+}
+if (other == null) {
+return false;
+}
+if (!(other instanceof Set)) {
+return false;
+}
+Set<?> otherSet = (Set<?>) other;
+if (SetUtils.isEqualSet(set, otherSet) == false) {
+return false;
+}
+return true;
+}",0
+235,"@Override
+protected Set<E> decorated() {
+return (Set<E>) super.decorated();
+}",0
+236,"@Override
+protected Set<E> decorated() {
+return (Set<E>) super.decorated();
+}",0
+237,"@Override
+public List<T> get(final int index) {
+final int listSize = size();
+if (listSize < 0) {
+throw new IllegalArgumentException(""negative size: "" + listSize);
+}
+if (index < 0) {
+throw new IndexOutOfBoundsException(""Index "" + index + "" must not be negative"");
+}
+if (index >= listSize) {
+throw new IndexOutOfBoundsException(""Index "" + index + "" must be less than size "" + listSize);
+}
+final int start = index * size;
+final int end = Math.min(start + size, list.size());
+return list.subList(start, end);
+}",0
+238,"public static <K> Boolean getBoolean(final Map<? super K, ?> map, final K key) {
+if (map != null) {
+final Object answer = map.get(key);
+if (answer != null) {
+if (answer instanceof Boolean) {
+return (Boolean) answer;
+}
+if (answer instanceof String) {
+return Boolean.valueOf((String) answer);
+}
+if (answer instanceof Number) {
+final Number n = (Number) answer;
+return n.intValue() != 0 ? Boolean.TRUE : Boolean.FALSE;
+}
+}
+}
+return null;
+}",0
+239,"@Override
+public boolean equals(final Object object) {
+if (object == this) {
+return true;
+}
+synchronized (lock) {
+return getBag().equals(object);
+}
+}",0
+240,"@Override
+public boolean equals(final Object obj) {
+return this.doEquals(obj, KEY);
+}",0
+241,"private UnmodifiableBidiMap<V, K> inverse;",0
+242,"private final Transformer<C, K> keyTransformer;",0
+243,"protected final Transformer<? super E, ? extends E> transformer;",0
+244,"private final Transformer<? super T, ? extends T>[] iTransformers;",0
+245,"@SuppressWarnings(""unchecked"")
+static <T> Predicate<T>[] copy(final Predicate<? super T>... predicates) {
+if (predicates == null) {
+return null;
+}
+return (Predicate<T>[]) predicates.clone();
+}",0
+246,"@SuppressWarnings(""unchecked"")
+static <E> Closure<E>[] copy(final Closure<? super E>... closures) {
+if (closures == null) {
+return null;
+}
+return (Closure<E>[]) closures.clone();
+}",0
+247,"@SuppressWarnings(""unchecked"")
+static <I, O> Transformer<I, O>[] copy(final Transformer<? super I, ? extends O>... transformers) {
+if (transformers == null) {
+return null;
+}
+return (Transformer<I, O>[]) transformers.clone();
+}",0
+248,private transient Method iCloneMethod;,0
+249,"private final Transformer<? super T, ? extends T> iTransformer;",0
+250,"private final Transformer<? super T, Boolean> iTransformer;",0
+251,"public ObjectArrayIterator(final E[] array, final int start, final int end) {
+super();
+if (start < 0) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be less than zero"");
+}
+if (end > array.length) {
+throw new ArrayIndexOutOfBoundsException(""End index must not be greater than the array length"");
+}
+if (start > array.length) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be greater than the array length"");
+}
+if (end < start) {
+throw new IllegalArgumentException(""End index must not be less than start index"");
+}
+this.array = array;
+this.startIndex = start;
+this.endIndex = end;
+this.index = start;
+}",0
+252,"public E[] getArray() {
+return this.array;
+}",0
+253,"private AVLNode<E> removeSelf() {
+if (getRightSubTree() == null && getLeftSubTree() == null) {
+return null;
+}
+if (getRightSubTree() == null) {
+if (relativePosition > 0) {
+left.relativePosition += relativePosition + (relativePosition > 0 ? 0 : 1);
+}
+left.max().setRight(null, right);
+return left;
+}
+if (getLeftSubTree() == null) {
+right.relativePosition += relativePosition - (relativePosition < 0 ? 0 : 1);
+right.min().setLeft(null, left);
+return right;
+}
+if (heightRightMinusLeft() > 0) {
+final AVLNode<E> rightMin = right.min();
+value = rightMin.value;
+if (leftIsPrevious) {
+left = rightMin.left;
+}
+right = right.removeMin();
+if (relativePosition < 0) {
+relativePosition++;
+}
+} else {
+final AVLNode<E> leftMax = left.max();
+value = leftMax.value;
+if (rightIsNext) {
+right = leftMax.right;
+}
+final AVLNode<E> leftPrevious = left.left;
+left = left.removeMax();
+if (left == null) {
+left = leftPrevious;
+leftIsPrevious = true;
+}
+if (relativePosition > 0) {
+relativePosition--;
+}
+}
+recalcHeight();
+return this;
+}",0
+254,"@Override
+protected LinkEntry<K, V> getEntry(final Object key) {
+return (LinkEntry<K, V>) super.getEntry(key);
+}",0
+255,"@Override
+protected void addEntry(final HashEntry<K, V> entry, final int hashIndex) {
+final LinkEntry<K, V> link = (LinkEntry<K, V>) entry;
+link.after = header;
+link.before = header.before;
+header.before.after = link;
+header.before = link;
+data[hashIndex] = link;
+}",0
+256,"protected void purge(final Reference<?> ref) {
+final int hash = ref.hashCode();
+final int index = hashIndex(hash, data.length);
+HashEntry<K, V> previous = null;
+HashEntry<K, V> entry = data[index];
+while (entry != null) {
+if (((ReferenceEntry<K, V>) entry).purge(ref)) {
+if (previous == null) {
+data[index] = entry.next;
+} else {
+previous.next = entry.next;
+}
+this.size--;
+return;
+}
+previous = entry;
+entry = entry.next;
+}
+}",0
+257,"private void convertToMap() {
+delegateMap = createDelegateMap();
+switch(size) {
+case 3:
+delegateMap.put(key3, value3);
+case 2:
+delegateMap.put(key2, value2);
+case 1:
+delegateMap.put(key1, value1);
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+size = 0;
+hash1 = hash2 = hash3 = 0;
+key1 = key2 = key3 = null;
+value1 = value2 = value3 = null;
+}",0
+258,protected K key;,0
+259,"@Override
+public boolean equals(Object other) {
+final List<V> list = (List<V>) getMapping();
+if (list == null) {
+return Collections.emptyList().equals(other);
+}
+if (other == null) {
+return false;
+}
+if (!(other instanceof List)) {
+return false;
+}
+List<?> otherList = (List<?>) other;
+if (ListUtils.isEqualList(list, otherList) == false) {
+return false;
+}
+return true;
+}",0
+260,"@SuppressWarnings(""unchecked"")
+public void add(int index, V value) {
+List<V> list = (List<V>) getMapping();
+if (list == null) {
+list = (List<V>) AbstractListValuedMap.this.createCollection();
+list.add(index, value);
+getMap().put((K) key, list);
+}
+list.add(index, value);
+}",0
+261,"public int lastIndexOf(Object o) {
+final List<V> list = ListUtils.emptyIfNull((List<V>) getMapping());
+return list.indexOf(o);
+}",0
+262,"@Override
+public int hashCode() {
+int h = 0;
+Iterator<Entry<K, Collection<V>>> it = getMap().entrySet().iterator();
+while (it.hasNext()) {
+Entry<K, Collection<V>> entry = it.next();
+K key = entry.getKey();
+List<V> valueList = (List<V>) entry.getValue();
+h += (key == null ? 0 : key.hashCode()) ^ ListUtils.hashCodeForList(valueList);
+}
+return h;
+}",0
+263,"@Override
+public int hashCode() {
+final Set<V> set = (Set<V>) getMapping();
+if (set == null) {
+return Collections.emptySet().hashCode();
+}
+return SetUtils.hashCodeForSet(set);
+}",0
+264,"private final Transformer<? super K, ? extends K> keyTransformer;",0
+265,"@Override
+protected Set<E> decorated() {
+return (Set<E>) super.decorated();
+}",0
+266,"protected SortedSet<E> getSortedSet() {
+return (SortedSet<E>) decorated();
+}",0
+267,"public static <K> Boolean getBoolean(final Map<? super K, ?> map, final K key) {
+if (map != null) {
+final Object answer = map.get(key);
+if (answer != null) {
+if (answer instanceof Boolean) {
+return (Boolean) answer;
+}
+if (answer instanceof String) {
+return Boolean.valueOf((String) answer);
+}
+if (answer instanceof Number) {
+final Number n = (Number) answer;
+return n.intValue() != 0 ? Boolean.TRUE : Boolean.FALSE;
+}
+}
+}
+return null;
+}",0
+268,"private final Transformer<? super T, ? extends T>[] iTransformers;",0
+269,"@SuppressWarnings(""unchecked"")
+static <I, O> Transformer<I, O>[] copy(final Transformer<? super I, ? extends O>... transformers) {
+if (transformers == null) {
+return null;
+}
+return (Transformer<I, O>[]) transformers.clone();
+}",0
+270,"@SuppressWarnings(""unchecked"")
+static <T> Predicate<T>[] copy(final Predicate<? super T>... predicates) {
+if (predicates == null) {
+return null;
+}
+return (Predicate<T>[]) predicates.clone();
+}",0
+271,"@SuppressWarnings(""unchecked"")
+static <E> Closure<E>[] copy(final Closure<? super E>... closures) {
+if (closures == null) {
+return null;
+}
+return (Closure<E>[]) closures.clone();
+}",0
+272,"private final Transformer<? super I, ? extends O> iFalseTransformer;",0
+273,private transient Method iCloneMethod;,0
+274,"private final Transformer<? super T, ? extends T> iTransformer;",0
+275,"private final Transformer<? super E, ?> iTransformer;",0
+276,"public MultiKey(final K[] keys, final boolean makeClone) {
+super();
+if (keys == null) {
+throw new IllegalArgumentException(""The array of keys must not be null"");
+}
+if (makeClone) {
+this.keys = keys.clone();
+} else {
+this.keys = keys;
+}
+calculateHashCode(keys);
+}",0
+277,"@Override
+protected List<E> decorated() {
+return (List<E>) super.decorated();
+}",0
+278,"protected List<E> getList() {
+return (List<E>) decorated();
+}",0
+279,"private AVLNode<E> removeSelf() {
+if (getRightSubTree() == null && getLeftSubTree() == null) {
+return null;
+}
+if (getRightSubTree() == null) {
+if (relativePosition > 0) {
+left.relativePosition += relativePosition + (relativePosition > 0 ? 0 : 1);
+}
+left.max().setRight(null, right);
+return left;
+}
+if (getLeftSubTree() == null) {
+right.relativePosition += relativePosition - (relativePosition < 0 ? 0 : 1);
+right.min().setLeft(null, left);
+return right;
+}
+if (heightRightMinusLeft() > 0) {
+final AVLNode<E> rightMin = right.min();
+value = rightMin.value;
+if (leftIsPrevious) {
+left = rightMin.left;
+}
+right = right.removeMin();
+if (relativePosition < 0) {
+relativePosition++;
+}
+} else {
+final AVLNode<E> leftMax = left.max();
+value = leftMax.value;
+if (rightIsNext) {
+right = leftMax.right;
+}
+final AVLNode<E> leftPrevious = left.left;
+left = left.removeMax();
+if (left == null) {
+left = leftPrevious;
+leftIsPrevious = true;
+}
+if (relativePosition > 0) {
+relativePosition--;
+}
+}
+recalcHeight();
+return this;
+}",0
+280,"@Override
+protected LinkEntry<K, V> getEntry(final Object key) {
+return (LinkEntry<K, V>) super.getEntry(key);
+}",0
+281,"protected ReferenceEntry<K, V> nextEntry() {
+checkMod();
+if (nextNull() && !hasNext()) {
+throw new NoSuchElementException();
+}
+previous = entry;
+entry = entry.next();
+currentKey = nextKey;
+currentValue = nextValue;
+nextKey = null;
+nextValue = null;
+return previous;
+}",0
+282,"@Override
+public int hashCode() {
+return hash;
+}",0
+283,"private void convertToMap() {
+delegateMap = createDelegateMap();
+switch(size) {
+case 3:
+delegateMap.put(key3, value3);
+case 2:
+delegateMap.put(key2, value2);
+case 1:
+delegateMap.put(key1, value1);
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+size = 0;
+hash1 = hash2 = hash3 = 0;
+key1 = key2 = key3 = null;
+value1 = value2 = value3 = null;
+}",0
+284,"@Override
+protected void updateEntry(final HashEntry<K, V> entry, final V newValue) {
+moveToMRU((LinkEntry<K, V>) entry);
+entry.setValue(newValue);
+}",0
+285,"@SuppressWarnings(""unchecked"")
+public void add(V value) {
+if (getMap().get(key) == null) {
+List<V> list = (List<V>) createCollection();
+getMap().put((K) key, list);
+this.values = list;
+this.iterator = list.listIterator();
+}
+this.iterator.add(value);
+}",0
+286,"@SuppressWarnings(""unchecked"")
+public boolean addAll(int index, Collection<? extends V> c) {
+List<V> list = (List<V>) getMapping();
+if (list == null) {
+list = (List<V>) createCollection();
+boolean result = list.addAll(index, c);
+if (result) {
+getMap().put((K) key, list);
+}
+return result;
+}
+return list.addAll(index, c);
+}",0
+287,"@Override
+public boolean equals(Object other) {
+final List<V> list = (List<V>) getMapping();
+if (list == null) {
+return Collections.emptyList().equals(other);
+}
+if (other == null) {
+return false;
+}
+if (!(other instanceof List)) {
+return false;
+}
+List<?> otherList = (List<?>) other;
+if (ListUtils.isEqualList(list, otherList) == false) {
+return false;
+}
+return true;
+}",0
+288,"public List<V> subList(int fromIndex, int toIndex) {
+final List<V> list = ListUtils.emptyIfNull((List<V>) getMapping());
+return list.subList(fromIndex, toIndex);
+}",0
+289,"public V set(int index, V value) {
+final List<V> list = ListUtils.emptyIfNull((List<V>) getMapping());
+return list.set(index, value);
+}",0
+290,"@Override
+public int hashCode() {
+int h = 0;
+Iterator<Entry<K, Collection<V>>> it = getMap().entrySet().iterator();
+while (it.hasNext()) {
+Entry<K, Collection<V>> entry = it.next();
+K key = entry.getKey();
+List<V> valueList = (List<V>) entry.getValue();
+h += (key == null ? 0 : key.hashCode()) ^ ListUtils.hashCodeForList(valueList);
+}
+return h;
+}",0
+291,"@Override
+public boolean equals(Object other) {
+final Set<V> set = (Set<V>) getMapping();
+if (set == null) {
+return Collections.emptySet().equals(other);
+}
+if (other == null) {
+return false;
+}
+if (!(other instanceof Set)) {
+return false;
+}
+Set<?> otherSet = (Set<?>) other;
+if (SetUtils.isEqualSet(set, otherSet) == false) {
+return false;
+}
+return true;
+}",0
+292,"private final Transformer<? super V, ? extends V> valueTransformer;",0
+293,"@Override
+protected Set<E> decorated() {
+return (Set<E>) super.decorated();
+}",0
+294,"protected SortedSet<E> getSortedSet() {
+return (SortedSet<E>) decorated();
+}",0
+295,"@SuppressWarnings(""unchecked"")
+public static <K, V> Map<K, V> putAll(final Map<K, V> map, final Object[] array) {
+map.size();
+if (array == null || array.length == 0) {
+return map;
+}
+final Object obj = array[0];
+if (obj instanceof Map.Entry) {
+for (final Object element : array) {
+final Map.Entry<K, V> entry = (Map.Entry<K, V>) element;
+map.put(entry.getKey(), entry.getValue());
+}
+} else if (obj instanceof KeyValue) {
+for (final Object element : array) {
+final KeyValue<K, V> keyval = (KeyValue<K, V>) element;
+map.put(keyval.getKey(), keyval.getValue());
+}
+} else if (obj instanceof Object[]) {
+for (int i = 0; i < array.length; i++) {
+final Object[] sub = (Object[]) array[i];
+if (sub == null || sub.length < 2) {
+throw new IllegalArgumentException(""Invalid array element: "" + i);
+}
+map.put((K) sub[0], (V) sub[1]);
+}
+} else {
+for (int i = 0; i < array.length - 1; ) {
+map.put((K) array[i++], (V) array[i++]);
+}
+}
+return map;
+}",0
+296,"public static <K> Boolean getBoolean(final Map<? super K, ?> map, final K key) {
+if (map != null) {
+final Object answer = map.get(key);
+if (answer != null) {
+if (answer instanceof Boolean) {
+return (Boolean) answer;
+}
+if (answer instanceof String) {
+return Boolean.valueOf((String) answer);
+}
+if (answer instanceof Number) {
+final Number n = (Number) answer;
+return n.intValue() != 0 ? Boolean.TRUE : Boolean.FALSE;
+}
+}
+}
+return null;
+}",0
+297,"private void writeObject(final ObjectOutputStream out) throws IOException {
+out.defaultWriteObject();
+out.writeObject(comparator());
+super.doWriteObject(out);
+}",0
+298,"@Override
+public boolean equals(final Object obj) {
+return this.doEquals(obj, KEY);
+}",0
+299,"@Override
+public boolean equals(final Object obj) {
+return TreeBidiMap.this.doEquals(obj, DataElement.VALUE);
+}",0
+300,"private final Transformer<C, K> keyTransformer;",0
+301,private final List<Comparator<E>> comparatorChain;,0
+302,private final Comparator<? super E> nonNullComparator;,0
+303,"private final Transformer<? super I, ? extends O> transformer;",0
+304,"@SuppressWarnings(""unchecked"")
+static <T> Predicate<T>[] copy(final Predicate<? super T>... predicates) {
+if (predicates == null) {
+return null;
+}
+return (Predicate<T>[]) predicates.clone();
+}",0
+305,"@SuppressWarnings(""unchecked"")
+static <I, O> Transformer<I, O>[] copy(final Transformer<? super I, ? extends O>... transformers) {
+if (transformers == null) {
+return null;
+}
+return (Transformer<I, O>[]) transformers.clone();
+}",0
+306,"@SuppressWarnings(""unchecked"")
+static <E> Closure<E>[] copy(final Closure<? super E>... closures) {
+if (closures == null) {
+return null;
+}
+return (Closure<E>[]) closures.clone();
+}",0
+307,"private final Transformer<? super I, ? extends O> iTrueTransformer;",0
+308,"private final Transformer<? super T, ? extends T> iTransformer;",0
+309,"private final Transformer<? super E, ?> iTransformer;",0
+310,"private final Transformer<? super T, Boolean> iTransformer;",0
+311,"public E[] getArray() {
+return this.array;
+}",0
+312,"public ObjectArrayIterator(final E[] array, final int start, final int end) {
+super();
+if (start < 0) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be less than zero"");
+}
+if (end > array.length) {
+throw new ArrayIndexOutOfBoundsException(""End index must not be greater than the array length"");
+}
+if (start > array.length) {
+throw new ArrayIndexOutOfBoundsException(""Start index must not be greater than the array length"");
+}
+if (end < start) {
+throw new IllegalArgumentException(""End index must not be less than start index"");
+}
+this.array = array;
+this.startIndex = start;
+this.endIndex = end;
+this.index = start;
+}",0
+313,"public MultiKey(final K[] keys, final boolean makeClone) {
+super();
+if (keys == null) {
+throw new IllegalArgumentException(""The array of keys must not be null"");
+}
+if (makeClone) {
+this.keys = keys.clone();
+} else {
+this.keys = keys;
+}
+calculateHashCode(keys);
+}",0
+314,"protected List<E> getList() {
+return (List<E>) decorated();
+}",0
+315,"@Override
+protected void removeEntry(final HashEntry<K, V> entry, final int hashIndex, final HashEntry<K, V> previous) {
+final LinkEntry<K, V> link = (LinkEntry<K, V>) entry;
+link.before.after = link.after;
+link.after.before = link.before;
+link.after = null;
+link.before = null;
+super.removeEntry(entry, hashIndex, previous);
+}",0
+316,"@Override
+protected LinkEntry<K, V> getEntry(final Object key) {
+return (LinkEntry<K, V>) super.getEntry(key);
+}",0
+317,"@Override
+public int hashCode() {
+return hash;
+}",0
+318,"private void convertToMap() {
+delegateMap = createDelegateMap();
+switch(size) {
+case 3:
+delegateMap.put(key3, value3);
+case 2:
+delegateMap.put(key2, value2);
+case 1:
+delegateMap.put(key1, value1);
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+size = 0;
+hash1 = hash2 = hash3 = 0;
+key1 = key2 = key3 = null;
+value1 = value2 = value3 = null;
+}",0
+319,"@Override
+public int hashCode() {
+if (delegateMap != null) {
+return delegateMap.hashCode();
+}
+int total = 0;
+switch(size) {
+case 3:
+total += hash3 ^ (value3 == null ? 0 : value3.hashCode());
+case 2:
+total += hash2 ^ (value2 == null ? 0 : value2.hashCode());
+case 1:
+total += hash1 ^ (value1 == null ? 0 : value1.hashCode());
+case 0:
+break;
+default:
+throw new IllegalStateException(""Invalid map index: "" + size);
+}
+return total;
+}",0
+320,"@Override
+protected void updateEntry(final HashEntry<K, V> entry, final V newValue) {
+moveToMRU((LinkEntry<K, V>) entry);
+entry.setValue(newValue);
+}",0
+321,"@Override
+protected Set<E> decorated() {
+return (Set<E>) super.decorated();
+}",0

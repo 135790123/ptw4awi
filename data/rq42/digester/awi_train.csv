@@ -1,0 +1,3479 @@
+,source,target
+0,"public Object[] peekParams(int n) {
+int index = (params.size() - 1) - n;
+if (index < 0) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+try {
+return (params.get(index));
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+1,"public Object[] peekParams() {
+try {
+return (params.peek());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+2,"public Object[] popParams() {
+try {
+if (log.isTraceEnabled()) {
+log.trace(""Popping params"");
+}
+return (params.pop());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+3,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+4,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+5,"@SuppressWarnings(""unchecked"")
+private <A extends Annotation, E extends AnnotatedElement, R extends Rule> void handle(A annotation, E element) {
+Class<?> annotationType = annotation.annotationType();
+if (annotationType.isAnnotationPresent(DigesterRuleList.class)) {
+Annotation[] annotations = getAnnotationsArrayValue(annotation);
+if (annotations != null && annotations.length > 0) {
+for (Annotation ptr : annotations) {
+handle(ptr, element);
+}
+}
+} else if (annotationType.isAnnotationPresent(DigesterRule.class)) {
+DigesterRule digesterRule = annotationType.getAnnotation(DigesterRule.class);
+Class<? extends AnnotationHandler<Annotation, AnnotatedElement>> handlerType = (Class<? extends AnnotationHandler<Annotation, AnnotatedElement>>) digesterRule.handledBy();
+try {
+AnnotationHandler<Annotation, AnnotatedElement> handler = annotationHandlerFactory.newInstance(handlerType);
+handler.handle(annotation, element, this.rulesBinder);
+} catch (Exception e) {
+rulesBinder.addError(e);
+}
+}
+}",0
+6,"@Override
+public void begin(String namespace, String name, Attributes attributes) throws Exception {
+String fileName = attributes.getValue(""url"");
+if (fileName != null && fileName.length() > 0) {
+final URL xmlRulesResource;
+if (fileName.startsWith(CLASSPATH_URL_PREFIX)) {
+String path = fileName.substring(CLASSPATH_URL_PREFIX.length());
+if ('/' == path.charAt(0)) {
+path = path.substring(1);
+}
+xmlRulesResource = this.targetRulesBinder.getContextClassLoader().getResource(path);
+if (xmlRulesResource == null) {
+targetRulesBinder.addError(""Resource '%s' not found, please make sure it is in the classpath"", path);
+return;
+}
+} else {
+try {
+xmlRulesResource = new URL(fileName);
+} catch (MalformedURLException e) {
+targetRulesBinder.addError(""An error occurred while inculing file from '%s': %s"", fileName, e.getMessage());
+return;
+}
+}
+if (memoryRulesBinder.getIncludedFiles().add(xmlRulesResource.toString())) {
+install(new FromXmlRulesModule() {
+@Override
+protected void loadRules() {
+loadXMLRules(xmlRulesResource);
+}
+});
+} else {
+targetRulesBinder.addError(""Circular file inclusion detected for XML rules: %s"", xmlRulesResource);
+}
+}
+String className = attributes.getValue(""class"");
+if (className != null && className.length() > 0) {
+try {
+Class<?> cls = Class.forName(className);
+if (!RulesModule.class.isAssignableFrom(cls)) {
+targetRulesBinder.addError(""Class '%s' if not a '%s' implementation"", className, RulesModule.class.getName());
+return;
+}
+RulesModule rulesSource = (RulesModule) cls.newInstance();
+install(rulesSource);
+} catch (Exception e) {
+targetRulesBinder.addError(""Impossible to include programmatic rules from class '%s': %s"", className, e.getMessage());
+}
+}
+}",0
+7,"protected LinkedRuleBuilder forPattern(String pattern) {
+return memoryRulesBinder.forPattern(pattern);
+}",0
+8,"@Override
+public String toString() {
+Formatter formatter = new Formatter().format(""CallMethodRule[methodName=%s, paramCount=%s, paramTypes={"", this.methodName, this.paramTypes.length);
+if (this.paramTypes != null) {
+for (int i = 0; i < this.paramTypes.length; i++) {
+if (i > 0) {
+formatter.format("", "");
+}
+formatter.format(this.paramTypes[i].getName());
+}
+}
+return formatter.format(""}]"").toString();
+}",0
+9,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters = null;
+if (this.paramCount > 0) {
+parameters = (Object[]) this.getDigester().popParams();
+if (this.getDigester().getLog().isTraceEnabled()) {
+Formatter formatter = new Formatter(""[CallMethodRule]"");
+for (int i = 0, size = parameters.length; i < size; i++) {
+if (i > 0) {
+formatter.format("", "");
+}
+formatter.format(""(%s) %s"", i, parameters[i]);
+}
+this.getDigester().getLog().trace(formatter.toString());
+}
+if (this.paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (this.paramTypes != null && this.paramTypes.length != 0) {
+if (this.bodyText == null) {
+return;
+}
+parameters = new Object[] { this.bodyText };
+} else {
+}
+Object[] paramValues = new Object[this.paramTypes.length];
+for (int i = 0; i < this.paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(this.paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (this.targetOffset >= 0) {
+target = this.getDigester().peek(this.targetOffset);
+} else {
+target = this.getDigester().peek(this.getDigester().getCount() + this.targetOffset);
+}
+if (target == null) {
+throw this.getDigester().createSAXException(String.format(""[CallMethodRule]{%s} Call target is null (targetOffset=%s, stackdepth=%s)"", this.getDigester().getMatch(), this.targetOffset, this.getDigester().getCount()));
+}
+if (this.getDigester().getLog().isDebugEnabled()) {
+Formatter formatter = new Formatter().format(""[CallMethodRule]{%s} Call %s.%s("", this.getDigester().getMatch(), target.getClass().getName(), this.methodName);
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+formatter.format("", "");
+}
+formatter.format(""%s/%s"", (paramValues[i] == null ? ""null"" : paramValues[i].toString()), (this.paramTypes[i] == null ? ""null"" : this.paramTypes[i].getName()));
+}
+formatter.format("")"");
+this.getDigester().getLog().debug(formatter.toString());
+}
+Object result = null;
+if (this.useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, this.methodName, paramValues, this.paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, this.methodName, paramValues, this.paramTypes);
+}
+processMethodCallResult(result);
+}",0
+10,private String currChildNamespaceURI = null;,0
+11,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters = null;
+if (paramCount > 0) {
+parameters = getDigester().popParams();
+if (getDigester().getLogger().isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+getDigester().getLogger().trace(""[CallMethodRule]("" + i + "")"" + parameters[i]);
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[1];
+parameters[0] = bodyText;
+if (paramTypes.length == 0) {
+paramTypes = new Class[1];
+paramTypes[0] = String.class;
+}
+} else {
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = getDigester().peek(targetOffset);
+} else {
+target = getDigester().peek(getDigester().getCount() + targetOffset);
+}
+if (target == null) {
+StringBuilder sb = new StringBuilder();
+sb.append(""[CallMethodRule]{"");
+sb.append(getDigester().getMatch());
+sb.append(""} Call target is null ("");
+sb.append(""targetOffset="");
+sb.append(targetOffset);
+sb.append("",stackdepth="");
+sb.append(getDigester().getCount());
+sb.append("")"");
+throw new org.xml.sax.SAXException(sb.toString());
+}
+if (getDigester().getLogger().isDebugEnabled()) {
+StringBuilder sb = new StringBuilder(""[CallMethodRule]{"");
+sb.append(getDigester().getMatch());
+sb.append(""} Call "");
+sb.append(target.getClass().getName());
+sb.append(""."");
+sb.append(methodName);
+sb.append(""("");
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+sb.append("","");
+}
+if (paramValues[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramValues[i].toString());
+}
+sb.append(""/"");
+if (paramTypes[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramTypes[i].getName());
+}
+}
+sb.append("")"");
+getDigester().getLogger().debug(sb.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+12,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters = null;
+if (paramCount > 0) {
+parameters = getDigester().popParams();
+if (getDigester().getLogger().isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+getDigester().getLogger().trace(""[CallMethodRule]("" + i + "")"" + parameters[i]);
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[1];
+parameters[0] = bodyText;
+if (paramTypes.length == 0) {
+paramTypes = new Class[1];
+paramTypes[0] = String.class;
+}
+} else {
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = getDigester().peek(targetOffset);
+} else {
+target = getDigester().peek(getDigester().getCount() + targetOffset);
+}
+if (target == null) {
+StringBuilder sb = new StringBuilder();
+sb.append(""[CallMethodRule]{"");
+sb.append(getDigester().getMatch());
+sb.append(""} Call target is null ("");
+sb.append(""targetOffset="");
+sb.append(targetOffset);
+sb.append("",stackdepth="");
+sb.append(getDigester().getCount());
+sb.append("")"");
+throw new org.xml.sax.SAXException(sb.toString());
+}
+if (getDigester().getLogger().isDebugEnabled()) {
+StringBuilder sb = new StringBuilder(""[CallMethodRule]{"");
+sb.append(getDigester().getMatch());
+sb.append(""} Call "");
+sb.append(target.getClass().getName());
+sb.append(""."");
+sb.append(methodName);
+sb.append(""("");
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+sb.append("","");
+}
+if (paramValues[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramValues[i].toString());
+}
+sb.append(""/"");
+if (paramTypes[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramTypes[i].getName());
+}
+}
+sb.append("")"");
+getDigester().getLogger().debug(sb.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+13,private String currChildNamespaceURI = null;,0
+14,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",0
+15,"public final String DFLT_PLUGIN_CLASS_ATTR = ""plugin-class"";",0
+16,"public static String DFLT_METHOD_ATTR = ""method"";",0
+17,"public static String DFLT_RULECLASS_ATTR = ""ruleclass"";",0
+18,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+19,"public static String DFLT_RULECLASS_SUFFIX = ""RuleInfo"";",0
+20,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+21,"public static String DFLT_FILENAME_ATTR = ""file"";",0
+22,"public static String DFLT_RESOURCE_ATTR = ""resource"";",0
+23,"public static String DFLT_FALSEVAL = ""false"";",0
+24,"public void end() throws Exception {
+Object[] parameters = null;
+if (paramCount > 0) {
+parameters = (Object[]) digester.popParams();
+if (digester.log.isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+digester.log.trace(""[CallMethodRule]("" + i + "")"" + parameters[i]);
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[1];
+parameters[0] = bodyText;
+if (paramTypes.length == 0) {
+paramTypes = new Class[1];
+paramTypes[0] = String.class;
+}
+} else {
+;
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = digester.peek(targetOffset);
+} else {
+target = digester.peek(digester.getCount() + targetOffset);
+}
+if (target == null) {
+StringBuffer sb = new StringBuffer();
+sb.append(""[CallMethodRule]{"");
+sb.append(digester.match);
+sb.append(""} Call target is null ("");
+sb.append(""targetOffset="");
+sb.append(targetOffset);
+sb.append("",stackdepth="");
+sb.append(digester.getCount());
+sb.append("")"");
+throw new org.xml.sax.SAXException(sb.toString());
+}
+if (digester.log.isDebugEnabled()) {
+StringBuffer sb = new StringBuffer(""[CallMethodRule]{"");
+sb.append(digester.match);
+sb.append(""} Call "");
+sb.append(target.getClass().getName());
+sb.append(""."");
+sb.append(methodName);
+sb.append(""("");
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+sb.append("","");
+}
+if (paramValues[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramValues[i].toString());
+}
+sb.append(""/"");
+if (paramTypes[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramTypes[i].getName());
+}
+}
+sb.append("")"");
+digester.log.debug(sb.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+25,"protected String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+26,protected String namespaceURI = null;,0
+27,"protected static String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+28,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+29,"private static String getXercesVersion() {
+String versionNumber = ""1.0"";
+try {
+Class versionClass = Class.forName(""org.apache.xerces.impl.Version"");
+Method method = versionClass.getMethod(""getVersion"", (Class[]) null);
+String version = (String) method.invoke(null, (Object[]) null);
+versionNumber = version.substring(""Xerces-J"".length(), version.lastIndexOf("".""));
+} catch (Exception ex) {
+}
+return versionNumber;
+}",0
+30,"protected static String XERCES_SCHEMA = ""http://apache.org/xml/features/validation/schema"";",0
+31,public final String DFLT_PLUGIN_ID_ATTR_NS = null;,0
+32,"public final String DFLT_PLUGIN_CLASS_ATTR = ""plugin-class"";",0
+33,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",0
+34,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+35,"public static String DFLT_METHOD_ATTR = ""method"";",0
+36,"public static String DFLT_RULECLASS_SUFFIX = ""RuleInfo"";",0
+37,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+38,"public static String DFLT_RESOURCE_SUFFIX = ""RuleInfo.xml"";",0
+39,"public static String DFLT_FILENAME_ATTR = ""file"";",0
+40,private FromXmlRuleSet ruleSet;,0
+41,"private void invoke() throws Exception {
+Object child = getChild();
+Object parent = getParent();
+if (getDigester().getLogger().isDebugEnabled()) {
+if (parent == null) {
+getDigester().getLogger().debug(format(""[%s]{%s} Call [NULL PARENT].%s(%s)"", getClass().getSimpleName(), getDigester().getMatch(), methodName, child));
+} else {
+getDigester().getLogger().debug(format(""[%s]{%s} Call %s.%s(%s)"", getClass().getSimpleName(), getDigester().getMatch(), parent.getClass().getName(), methodName, child));
+}
+}
+Class<?>[] paramTypes = new Class<?>[1];
+if (paramType != null) {
+paramTypes[0] = getDigester().getClassLoader().loadClass(paramTypeName);
+} else {
+paramTypes[0] = child.getClass();
+}
+if (useExactMatch) {
+invokeExactMethod(parent, methodName, new Object[] { child }, paramTypes);
+} else {
+invokeMethod(parent, methodName, new Object[] { child }, paramTypes);
+}
+}",0
+42,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters;
+if (paramCount > 0) {
+parameters = getDigester().popParams();
+if (getDigester().getLogger().isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+getDigester().getLogger().trace(format(""[CallMethodRule]{%s} parameters[%s]=%s"", getDigester().getMatch(), i, parameters[i]));
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[] { bodyText };
+if (paramTypes.length == 0) {
+paramTypes = new Class[] { String.class };
+}
+} else {
+parameters = new Object[0];
+paramTypes = new Class<?>[0];
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = getDigester().peek(targetOffset);
+} else {
+target = getDigester().peek(getDigester().getCount() + targetOffset);
+}
+if (target == null) {
+throw new SAXException(format(""[CallMethodRule]{%s} Call target is null (targetOffset=%s, stackdepth=%s)"", getDigester().getMatch(), targetOffset, getDigester().getCount()));
+}
+if (getDigester().getLogger().isDebugEnabled()) {
+Formatter formatter = new Formatter().format(""[CallMethodRule]{%s} Call %s.%s("", getDigester().getMatch(), target.getClass().getName(), methodName);
+for (int i = 0; i < paramValues.length; i++) {
+formatter.format(""%s%s/%s"", (i > 0 ? "", "" : """"), paramValues[i], paramTypes[i].getName());
+}
+formatter.format("")"");
+getDigester().getLogger().debug(formatter.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+43,"public Object[] popParams() {
+try {
+if (log.isTraceEnabled()) {
+log.trace(""Popping params"");
+}
+return (params.pop());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+44,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+45,"@SuppressWarnings(""unchecked"")
+private <A extends Annotation, E extends AnnotatedElement, R extends Rule> void handle(A annotation, E element) {
+Class<?> annotationType = annotation.annotationType();
+if (annotationType.isAnnotationPresent(DigesterRuleList.class)) {
+Annotation[] annotations = getAnnotationsArrayValue(annotation);
+if (annotations != null && annotations.length > 0) {
+for (Annotation ptr : annotations) {
+handle(ptr, element);
+}
+}
+} else if (annotationType.isAnnotationPresent(DigesterRule.class)) {
+DigesterRule digesterRule = annotationType.getAnnotation(DigesterRule.class);
+Class<? extends AnnotationHandler<Annotation, AnnotatedElement>> handlerType = (Class<? extends AnnotationHandler<Annotation, AnnotatedElement>>) digesterRule.handledBy();
+try {
+AnnotationHandler<Annotation, AnnotatedElement> handler = annotationHandlerFactory.newInstance(handlerType);
+handler.handle(annotation, element, this.rulesBinder);
+} catch (Exception e) {
+rulesBinder.addError(e);
+}
+}
+}",0
+46,"@SuppressWarnings(""unchecked"")
+private <A extends Annotation, E extends AnnotatedElement, R extends Rule> void handle(A annotation, E element) {
+Class<?> annotationType = annotation.annotationType();
+if (annotationType.isAnnotationPresent(DigesterRuleList.class)) {
+Annotation[] annotations = getAnnotationsArrayValue(annotation);
+if (annotations != null && annotations.length > 0) {
+for (Annotation ptr : annotations) {
+handle(ptr, element);
+}
+}
+} else if (annotationType.isAnnotationPresent(DigesterRule.class)) {
+DigesterRule digesterRule = annotationType.getAnnotation(DigesterRule.class);
+Class<? extends AnnotationHandler<Annotation, AnnotatedElement>> handlerType = (Class<? extends AnnotationHandler<Annotation, AnnotatedElement>>) digesterRule.handledBy();
+try {
+AnnotationHandler<Annotation, AnnotatedElement> handler = annotationHandlerFactory.newInstance(handlerType);
+handler.handle(annotation, element, this.rulesBinder);
+} catch (Exception e) {
+rulesBinder.addError(e);
+}
+}
+}",0
+47,"public static Annotation[] getAnnotationsArrayValue(Annotation annotation) {
+Object value = getAnnotationValue(annotation);
+if (value != null && value.getClass().isArray() && Annotation.class.isAssignableFrom(value.getClass().getComponentType())) {
+return (Annotation[]) value;
+}
+return null;
+}",0
+48,"@Override
+public void begin(String namespace, String name, Attributes attributes) throws Exception {
+String fileName = attributes.getValue(""url"");
+if (fileName != null && fileName.length() > 0) {
+final URL xmlRulesResource;
+if (fileName.startsWith(CLASSPATH_URL_PREFIX)) {
+String path = fileName.substring(CLASSPATH_URL_PREFIX.length());
+if ('/' == path.charAt(0)) {
+path = path.substring(1);
+}
+xmlRulesResource = this.targetRulesBinder.getContextClassLoader().getResource(path);
+if (xmlRulesResource == null) {
+targetRulesBinder.addError(""Resource '%s' not found, please make sure it is in the classpath"", path);
+return;
+}
+} else {
+try {
+xmlRulesResource = new URL(fileName);
+} catch (MalformedURLException e) {
+targetRulesBinder.addError(""An error occurred while inculing file from '%s': %s"", fileName, e.getMessage());
+return;
+}
+}
+if (memoryRulesBinder.getIncludedFiles().add(xmlRulesResource.toString())) {
+install(new FromXmlRulesModule() {
+@Override
+protected void loadRules() {
+loadXMLRules(xmlRulesResource);
+}
+});
+} else {
+targetRulesBinder.addError(""Circular file inclusion detected for XML rules: %s"", xmlRulesResource);
+}
+}
+String className = attributes.getValue(""class"");
+if (className != null && className.length() > 0) {
+try {
+Class<?> cls = Class.forName(className);
+if (!RulesModule.class.isAssignableFrom(cls)) {
+targetRulesBinder.addError(""Class '%s' if not a '%s' implementation"", className, RulesModule.class.getName());
+return;
+}
+RulesModule rulesSource = (RulesModule) cls.newInstance();
+install(rulesSource);
+} catch (Exception e) {
+targetRulesBinder.addError(""Impossible to include programmatic rules from class '%s': %s"", className, e.getMessage());
+}
+}
+}",0
+49,"protected LinkedRuleBuilder forPattern(String pattern) {
+return memoryRulesBinder.forPattern(pattern);
+}",0
+50,"public SAXParser getParser() {
+if (parser != null) {
+return (parser);
+}
+try {
+if (validating && (schemaLocation != null)) {
+Properties properties = new Properties();
+properties.put(""SAXParserFactory"", getFactory());
+if (schemaLocation != null) {
+properties.put(""schemaLocation"", schemaLocation);
+properties.put(""schemaLanguage"", schemaLanguage);
+}
+parser = ParserFeatureSetterFactory.newSAXParser(properties);
+} else {
+parser = getFactory().newSAXParser();
+}
+} catch (Exception e) {
+log.error(""Digester.getParser: "", e);
+return (null);
+}
+return (parser);
+}",0
+51,protected String namespaceURI = null;,0
+52,private final int cacheSize = 255;,0
+53,private final float loadFactor = 0.75f;,0
+54,"public MethodArgument(int index, Class<?> parameterType, Annotation[] annotations) {
+this.index = index;
+this.parameterType = parameterType;
+this.annotations = annotations;
+}",0
+55,"public static Annotation[] getAnnotationsArrayValue(Annotation annotation) {
+Object value = getAnnotationValue(annotation);
+if (value != null && value.getClass().isArray() && Annotation.class.isAssignableFrom(value.getClass().getComponentType())) {
+return (Annotation[]) value;
+}
+return null;
+}",0
+56,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+57,"private static String getXercesVersion() {
+String versionNumber = ""1.0"";
+try {
+Class<?> versionClass = Class.forName(""org.apache.xerces.impl.Version"");
+Method method = versionClass.getMethod(""getVersion"", (Class[]) null);
+String version = (String) method.invoke(null, (Object[]) null);
+versionNumber = version.substring(""Xerces-J"".length(), version.lastIndexOf("".""));
+} catch (Exception ex) {
+}
+return versionNumber;
+}",0
+58,"protected static String XERCES_SCHEMA = ""http://apache.org/xml/features/validation/schema"";",0
+59,"public final String DFLT_PLUGIN_CLASS_ATTR = ""plugin-class"";",0
+60,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",0
+61,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+62,"public static String DFLT_PROPS_ATTR = ""setprops"";",0
+63,"@Override
+public String toString() {
+Formatter formatter = new Formatter().format(""CallMethodRule[methodName=%s, paramCount=%s, paramTypes={"", this.methodName, this.paramTypes.length);
+if (this.paramTypes != null) {
+for (int i = 0; i < this.paramTypes.length; i++) {
+if (i > 0) {
+formatter.format("", "");
+}
+formatter.format(this.paramTypes[i].getName());
+}
+}
+return formatter.format(""}]"").toString();
+}",0
+64,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters = null;
+if (this.paramTypes.length > 0) {
+parameters = (Object[]) this.getDigester().popParams();
+if (this.getDigester().getLog().isTraceEnabled()) {
+Formatter formatter = new Formatter(""[CallMethodRule]"");
+for (int i = 0, size = parameters.length; i < size; i++) {
+if (i > 0) {
+formatter.format("", "");
+}
+formatter.format(""(%s) %s"", i, parameters[i]);
+}
+this.getDigester().getLog().trace(formatter.toString());
+}
+if (this.paramTypes.length == 1 && parameters[0] == null) {
+return;
+}
+} else if (this.paramTypes != null && this.paramTypes.length != 0) {
+if (this.bodyText == null) {
+return;
+}
+parameters = new Object[] { this.bodyText };
+} else {
+}
+Object[] paramValues = new Object[this.paramTypes.length];
+for (int i = 0; i < this.paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(this.paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (this.targetOffset >= 0) {
+target = this.getDigester().peek(this.targetOffset);
+} else {
+target = this.getDigester().peek(this.getDigester().getCount() + this.targetOffset);
+}
+if (target == null) {
+throw this.getDigester().createSAXException(String.format(""[CallMethodRule]{%s} Call target is null (targetOffset=%s, stackdepth=%s)"", this.getDigester().getMatch(), this.targetOffset, this.getDigester().getCount()));
+}
+if (this.getDigester().getLog().isDebugEnabled()) {
+Formatter formatter = new Formatter().format(""[CallMethodRule]{%s} Call %s.%s("", this.getDigester().getMatch(), target.getClass().getName(), this.methodName);
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+formatter.format("", "");
+}
+formatter.format(""%s/%s"", (paramValues[i] == null ? ""null"" : paramValues[i].toString()), (this.paramTypes[i] == null ? ""null"" : this.paramTypes[i].getName()));
+}
+formatter.format("")"");
+this.getDigester().getLog().debug(formatter.toString());
+}
+Object result = null;
+if (this.useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, this.methodName, paramValues, this.paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, this.methodName, paramValues, this.paramTypes);
+}
+processMethodCallResult(result);
+}",0
+65,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters = null;
+if (this.paramTypes.length > 0) {
+parameters = (Object[]) this.getDigester().popParams();
+if (this.getDigester().getLog().isTraceEnabled()) {
+Formatter formatter = new Formatter(""[CallMethodRule]"");
+for (int i = 0, size = parameters.length; i < size; i++) {
+if (i > 0) {
+formatter.format("", "");
+}
+formatter.format(""(%s) %s"", i, parameters[i]);
+}
+this.getDigester().getLog().trace(formatter.toString());
+}
+if (this.paramTypes.length == 1 && parameters[0] == null) {
+return;
+}
+} else if (this.paramTypes != null && this.paramTypes.length != 0) {
+if (this.bodyText == null) {
+return;
+}
+parameters = new Object[] { this.bodyText };
+} else {
+}
+Object[] paramValues = new Object[this.paramTypes.length];
+for (int i = 0; i < this.paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(this.paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (this.targetOffset >= 0) {
+target = this.getDigester().peek(this.targetOffset);
+} else {
+target = this.getDigester().peek(this.getDigester().getCount() + this.targetOffset);
+}
+if (target == null) {
+throw this.getDigester().createSAXException(String.format(""[CallMethodRule]{%s} Call target is null (targetOffset=%s, stackdepth=%s)"", this.getDigester().getMatch(), this.targetOffset, this.getDigester().getCount()));
+}
+if (this.getDigester().getLog().isDebugEnabled()) {
+Formatter formatter = new Formatter().format(""[CallMethodRule]{%s} Call %s.%s("", this.getDigester().getMatch(), target.getClass().getName(), this.methodName);
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+formatter.format("", "");
+}
+formatter.format(""%s/%s"", (paramValues[i] == null ? ""null"" : paramValues[i].toString()), (this.paramTypes[i] == null ? ""null"" : this.paramTypes[i].getName()));
+}
+formatter.format("")"");
+this.getDigester().getLog().debug(formatter.toString());
+}
+Object result = null;
+if (this.useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, this.methodName, paramValues, this.paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, this.methodName, paramValues, this.paramTypes);
+}
+processMethodCallResult(result);
+}",0
+66,private final List<ErrorMessage> errors;,0
+67,"public void end() throws Exception {
+Object[] parameters = null;
+if (paramCount > 0) {
+parameters = (Object[]) digester.popParams();
+if (digester.log.isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+digester.log.trace(""[CallMethodRule]("" + i + "")"" + parameters[i]);
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[1];
+parameters[0] = bodyText;
+if (paramTypes.length == 0) {
+paramTypes = new Class[1];
+paramTypes[0] = String.class;
+}
+} else {
+;
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = digester.peek(targetOffset);
+} else {
+target = digester.peek(digester.getCount() + targetOffset);
+}
+if (target == null) {
+StringBuffer sb = new StringBuffer();
+sb.append(""[CallMethodRule]{"");
+sb.append(digester.match);
+sb.append(""} Call target is null ("");
+sb.append(""targetOffset="");
+sb.append(targetOffset);
+sb.append("",stackdepth="");
+sb.append(digester.getCount());
+sb.append("")"");
+throw new org.xml.sax.SAXException(sb.toString());
+}
+if (digester.log.isDebugEnabled()) {
+StringBuffer sb = new StringBuffer(""[CallMethodRule]{"");
+sb.append(digester.match);
+sb.append(""} Call "");
+sb.append(target.getClass().getName());
+sb.append(""."");
+sb.append(methodName);
+sb.append(""("");
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+sb.append("","");
+}
+if (paramValues[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramValues[i].toString());
+}
+sb.append(""/"");
+if (paramTypes[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramTypes[i].getName());
+}
+}
+sb.append("")"");
+digester.log.debug(sb.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+68,"public SAXParser getParser() {
+if (parser != null) {
+return (parser);
+}
+try {
+if (validating && (schemaLocation != null)) {
+Properties properties = new Properties();
+properties.put(""SAXParserFactory"", getFactory());
+if (schemaLocation != null) {
+properties.put(""schemaLocation"", schemaLocation);
+properties.put(""schemaLanguage"", schemaLanguage);
+}
+parser = ParserFeatureSetterFactory.newSAXParser(properties);
+} else {
+parser = getFactory().newSAXParser();
+}
+} catch (Exception e) {
+log.error(""Digester.getParser: "", e);
+return (null);
+}
+return (parser);
+}",0
+69,private String currChildNamespaceURI = null;,0
+70,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+71,"protected static String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+72,"protected static String XERCES_SCHEMA = ""http://apache.org/xml/features/validation/schema"";",0
+73,"protected static String XERCES_DYNAMIC = ""http://apache.org/xml/features/validation/dynamic"";",0
+74,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+75,"public final String DFLT_PLUGIN_CLASS_ATTR = ""plugin-class"";",0
+76,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+77,"public static String DFLT_FILENAME_ATTR = ""file"";",0
+78,"public static String DFLT_FALSEVAL = ""false"";",0
+79,"public void end() throws Exception {
+Object[] parameters = null;
+if (paramCount > 0) {
+parameters = (Object[]) digester.popParams();
+if (digester.log.isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+digester.log.trace(""[CallMethodRule]("" + i + "")"" + parameters[i]);
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[1];
+parameters[0] = bodyText;
+if (paramTypes.length == 0) {
+paramTypes = new Class[1];
+paramTypes[0] = String.class;
+}
+} else {
+;
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = digester.peek(targetOffset);
+} else {
+target = digester.peek(digester.getCount() + targetOffset);
+}
+if (target == null) {
+StringBuffer sb = new StringBuffer();
+sb.append(""[CallMethodRule]{"");
+sb.append(digester.match);
+sb.append(""} Call target is null ("");
+sb.append(""targetOffset="");
+sb.append(targetOffset);
+sb.append("",stackdepth="");
+sb.append(digester.getCount());
+sb.append("")"");
+throw new org.xml.sax.SAXException(sb.toString());
+}
+if (digester.log.isDebugEnabled()) {
+StringBuffer sb = new StringBuffer(""[CallMethodRule]{"");
+sb.append(digester.match);
+sb.append(""} Call "");
+sb.append(target.getClass().getName());
+sb.append(""."");
+sb.append(methodName);
+sb.append(""("");
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+sb.append("","");
+}
+if (paramValues[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramValues[i].toString());
+}
+sb.append(""/"");
+if (paramTypes[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramTypes[i].getName());
+}
+}
+sb.append("")"");
+digester.log.debug(sb.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+80,"public SAXParser getParser() {
+if (parser != null) {
+return (parser);
+}
+try {
+if (validating && (schemaLocation != null)) {
+Properties properties = new Properties();
+properties.put(""SAXParserFactory"", getFactory());
+if (schemaLocation != null) {
+properties.put(""schemaLocation"", schemaLocation);
+properties.put(""schemaLanguage"", schemaLanguage);
+}
+parser = ParserFeatureSetterFactory.newSAXParser(properties);
+} else {
+parser = getFactory().newSAXParser();
+}
+} catch (Exception e) {
+log.error(""Digester.getParser: "", e);
+return (null);
+}
+return (parser);
+}",0
+81,protected String namespaceURI = null;,0
+82,private String currChildNamespaceURI = null;,0
+83,"protected static String XERCES_SCHEMA = ""http://apache.org/xml/features/validation/schema"";",0
+84,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+85,protected static float version;,0
+86,"protected static String XERCES_DYNAMIC = ""http://apache.org/xml/features/validation/dynamic"";",0
+87,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",0
+88,"public final String DFLT_PLUGIN_CLASS_ATTR = ""plugin-class"";",0
+89,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+90,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+91,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+92,"public static String DFLT_RESOURCE_SUFFIX = ""RuleInfo.xml"";",0
+93,"public static String DFLT_FILENAME_ATTR = ""file"";",0
+94,"public static String DFLT_METHOD_ATTR = ""method"";",0
+95,"public static String DFLT_RESOURCE_ATTR = ""resource"";",0
+96,"public static String DFLT_PROPS_ATTR = ""setprops"";",0
+97,"public static String DFLT_FALSEVAL = ""false"";",0
+98,"public Object[] peekParams() {
+try {
+return (params.peek());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+99,"public Object[] peekParams(int n) {
+int index = (params.size() - 1) - n;
+if (index < 0) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+try {
+return (params.get(index));
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+100,"public Object[] popParams() {
+try {
+if (log.isTraceEnabled()) {
+log.trace(""Popping params"");
+}
+return (params.pop());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+101,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+102,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+103,"@SuppressWarnings(""unchecked"")
+private <A extends Annotation, E extends AnnotatedElement, R extends Rule> void handle(A annotation, E element) {
+Class<?> annotationType = annotation.annotationType();
+if (annotationType.isAnnotationPresent(DigesterRuleList.class)) {
+Annotation[] annotations = getAnnotationsArrayValue(annotation);
+if (annotations != null && annotations.length > 0) {
+for (Annotation ptr : annotations) {
+handle(ptr, element);
+}
+}
+} else if (annotationType.isAnnotationPresent(DigesterRule.class)) {
+DigesterRule digesterRule = annotationType.getAnnotation(DigesterRule.class);
+Class<? extends AnnotationHandler<Annotation, AnnotatedElement>> handlerType = (Class<? extends AnnotationHandler<Annotation, AnnotatedElement>>) digesterRule.handledBy();
+try {
+AnnotationHandler<Annotation, AnnotatedElement> handler = annotationHandlerFactory.newInstance(handlerType);
+handler.handle(annotation, element, this.rulesBinder);
+} catch (Exception e) {
+rulesBinder.addError(e);
+}
+}
+}",0
+104,"@Override
+public void begin(String namespace, String name, Attributes attributes) throws Exception {
+String fileName = attributes.getValue(""url"");
+if (fileName != null && fileName.length() > 0) {
+final URL xmlRulesResource;
+if (fileName.startsWith(CLASSPATH_URL_PREFIX)) {
+String path = fileName.substring(CLASSPATH_URL_PREFIX.length());
+if ('/' == path.charAt(0)) {
+path = path.substring(1);
+}
+xmlRulesResource = this.targetRulesBinder.getContextClassLoader().getResource(path);
+if (xmlRulesResource == null) {
+targetRulesBinder.addError(""Resource '%s' not found, please make sure it is in the classpath"", path);
+return;
+}
+} else {
+try {
+xmlRulesResource = new URL(fileName);
+} catch (MalformedURLException e) {
+targetRulesBinder.addError(""An error occurred while inculing file from '%s': %s"", fileName, e.getMessage());
+return;
+}
+}
+if (memoryRulesBinder.getIncludedFiles().add(xmlRulesResource.toString())) {
+install(new FromXmlRulesModule() {
+@Override
+protected void loadRules() {
+loadXMLRules(xmlRulesResource);
+}
+});
+} else {
+targetRulesBinder.addError(""Circular file inclusion detected for XML rules: %s"", xmlRulesResource);
+}
+}
+String className = attributes.getValue(""class"");
+if (className != null && className.length() > 0) {
+try {
+Class<?> cls = Class.forName(className);
+if (!RulesModule.class.isAssignableFrom(cls)) {
+targetRulesBinder.addError(""Class '%s' if not a '%s' implementation"", className, RulesModule.class.getName());
+return;
+}
+RulesModule rulesSource = (RulesModule) cls.newInstance();
+install(rulesSource);
+} catch (Exception e) {
+targetRulesBinder.addError(""Impossible to include programmatic rules from class '%s': %s"", className, e.getMessage());
+}
+}
+}",0
+105,"@Override
+public void end() throws Exception {
+Object[] parameters = null;
+if (paramCount > 0) {
+parameters = (Object[]) digester.popParams();
+if (digester.log.isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+digester.log.trace(""[CallMethodRule]("" + i + "")"" + parameters[i]);
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[1];
+parameters[0] = bodyText;
+if (paramTypes.length == 0) {
+paramTypes = new Class[1];
+paramTypes[0] = String.class;
+}
+} else {
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = digester.peek(targetOffset);
+} else {
+target = digester.peek(digester.getCount() + targetOffset);
+}
+if (target == null) {
+StringBuffer sb = new StringBuffer();
+sb.append(""[CallMethodRule]{"");
+sb.append(digester.match);
+sb.append(""} Call target is null ("");
+sb.append(""targetOffset="");
+sb.append(targetOffset);
+sb.append("",stackdepth="");
+sb.append(digester.getCount());
+sb.append("")"");
+throw new org.xml.sax.SAXException(sb.toString());
+}
+if (digester.log.isDebugEnabled()) {
+StringBuffer sb = new StringBuffer(""[CallMethodRule]{"");
+sb.append(digester.match);
+sb.append(""} Call "");
+sb.append(target.getClass().getName());
+sb.append(""."");
+sb.append(methodName);
+sb.append(""("");
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+sb.append("","");
+}
+if (paramValues[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramValues[i].toString());
+}
+sb.append(""/"");
+if (paramTypes[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramTypes[i].getName());
+}
+}
+sb.append("")"");
+digester.log.debug(sb.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+106,"public SAXParser getParser() {
+if (parser != null) {
+return (parser);
+}
+try {
+if (validating && (schemaLocation != null)) {
+Properties properties = new Properties();
+properties.put(""SAXParserFactory"", getFactory());
+if (schemaLocation != null) {
+properties.put(""schemaLocation"", schemaLocation);
+properties.put(""schemaLanguage"", schemaLanguage);
+}
+parser = ParserFeatureSetterFactory.newSAXParser(properties);
+} else {
+parser = getFactory().newSAXParser();
+}
+} catch (Exception e) {
+log.error(""Digester.getParser: "", e);
+return (null);
+}
+return (parser);
+}",0
+107,private String currChildNamespaceURI = null;,0
+108,private final int cacheSize = 255;,0
+109,private final int cacheSize = 255;,0
+110,"public MethodArgument(int index, Class<?> parameterType, Annotation[] annotations) {
+this.index = index;
+this.parameterType = parameterType;
+this.annotations = annotations;
+}",0
+111,"protected static String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+112,"private static String getXercesVersion() {
+String versionNumber = ""1.0"";
+try {
+Class<?> versionClass = Class.forName(""org.apache.xerces.impl.Version"");
+Method method = versionClass.getMethod(""getVersion"", (Class[]) null);
+String version = (String) method.invoke(null, (Object[]) null);
+versionNumber = version.substring(""Xerces-J"".length(), version.lastIndexOf("".""));
+} catch (Exception ex) {
+}
+return versionNumber;
+}",0
+113,"protected static String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+114,protected static String versionNumber = null;,0
+115,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+116,"public final String DFLT_PLUGIN_CLASS_ATTR = ""plugin-class"";",0
+117,public final String DFLT_PLUGIN_ID_ATTR_NS = null;,0
+118,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",0
+119,"public static String DFLT_RULECLASS_SUFFIX = ""RuleInfo"";",0
+120,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+121,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+122,"public static String DFLT_RESOURCE_SUFFIX = ""RuleInfo.xml"";",0
+123,"public static String DFLT_FILENAME_ATTR = ""file"";",0
+124,"public static String DFLT_METHOD_ATTR = ""method"";",0
+125,"public static String DFLT_PROPS_ATTR = ""setprops"";",0
+126,"private final Map<Class<?>, FromAnnotationsRuleSet> data = new LinkedHashMap<Class<?>, FromAnnotationsRuleSet>(capacity, loadFactor) {
+private static final long serialVersionUID = 1L;
+@Override
+protected boolean removeEldestEntry(Map.Entry<Class<?>, FromAnnotationsRuleSet> eldest) {
+return size() > cacheSize;
+}
+};",0
+127,"public static Annotation[] getAnnotationsArrayValue(Annotation annotation) {
+Object value = getAnnotationValue(annotation);
+if (value != null && value.getClass().isArray() && Annotation.class.isAssignableFrom(value.getClass().getComponentType())) {
+return (Annotation[]) value;
+}
+return null;
+}",0
+128,"protected static String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+129,"protected static String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+130,"public static SAXParser newSAXParser(Properties properties) throws ParserConfigurationException, SAXException, SAXNotSupportedException {
+SAXParserFactory factory = (SAXParserFactory) properties.get(""SAXParserFactory"");
+if (versionNumber == null) {
+versionNumber = getXercesVersion();
+version = new Float(versionNumber).floatValue();
+}
+// Note: 2.2 is completely broken (with XML Schema).
+if (version > 2.1) {
+configureXerces(factory);
+return factory.newSAXParser();
+} else {
+SAXParser parser = factory.newSAXParser();
+configureOldXerces(parser, properties);
+return parser;
+}
+}",0
+131,"protected static String XERCES_DYNAMIC = ""http://apache.org/xml/features/validation/dynamic"";",0
+132,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+133,protected static String versionNumber = null;,0
+134,"protected static String XERCES_SCHEMA = ""http://apache.org/xml/features/validation/schema"";",0
+135,"// TODO: Consider making following four constants static in 2.0
+public final String DFLT_PLUGIN_CLASS_ATTR_NS = null;",0
+136,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",0
+137,"public static String DFLT_RULECLASS_ATTR = ""ruleclass"";",0
+138,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+139,"public static String DFLT_RULECLASS_SUFFIX = ""RuleInfo"";",0
+140,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+141,"public static String DFLT_RESOURCE_SUFFIX = ""RuleInfo.xml"";",0
+142,"public static String DFLT_PROPS_ATTR = ""setprops"";",0
+143,"public Object[] peekParams() {
+try {
+return (params.peek());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+144,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+145,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+146,"@Override
+protected FactoryCreateRule createRule() {
+if (type == null && attributeName == null && creationFactory == null) {
+reportError(""factoryCreate()"", ""at least one between 'className', 'attributeName' or 'creationFactory' has to be specified"");
+}
+if (type != null || attributeName != null) {
+return new FactoryCreateRule(type, attributeName, ignoreCreateExceptions);
+}
+return new FactoryCreateRule(creationFactory, ignoreCreateExceptions);
+}",0
+147,"@Override
+public void begin(String namespace, String name, Attributes attributes) throws Exception {
+String fileName = attributes.getValue(""url"");
+if (fileName != null && fileName.length() > 0) {
+final URL xmlRulesResource;
+if (fileName.startsWith(CLASSPATH_URL_PREFIX)) {
+String path = fileName.substring(CLASSPATH_URL_PREFIX.length());
+if ('/' == path.charAt(0)) {
+path = path.substring(1);
+}
+xmlRulesResource = this.targetRulesBinder.getContextClassLoader().getResource(path);
+if (xmlRulesResource == null) {
+targetRulesBinder.addError(""Resource '%s' not found, please make sure it is in the classpath"", path);
+return;
+}
+} else {
+try {
+xmlRulesResource = new URL(fileName);
+} catch (MalformedURLException e) {
+targetRulesBinder.addError(""An error occurred while inculing file from '%s': %s"", fileName, e.getMessage());
+return;
+}
+}
+if (memoryRulesBinder.getIncludedFiles().add(xmlRulesResource.toString())) {
+install(new FromXmlRulesModule() {
+@Override
+protected void loadRules() {
+loadXMLRules(xmlRulesResource);
+}
+});
+} else {
+targetRulesBinder.addError(""Circular file inclusion detected for XML rules: %s"", xmlRulesResource);
+}
+}
+String className = attributes.getValue(""class"");
+if (className != null && className.length() > 0) {
+try {
+Class<?> cls = Class.forName(className);
+if (!RulesModule.class.isAssignableFrom(cls)) {
+targetRulesBinder.addError(""Class '%s' if not a '%s' implementation"", className, RulesModule.class.getName());
+return;
+}
+RulesModule rulesSource = (RulesModule) cls.newInstance();
+install(rulesSource);
+} catch (Exception e) {
+targetRulesBinder.addError(""Impossible to include programmatic rules from class '%s': %s"", className, e.getMessage());
+}
+}
+}",0
+148,"public MethodArgument(int index, Class<?> parameterType, Annotation[] annotations) {
+this.index = index;
+this.parameterType = parameterType;
+this.annotations = annotations;
+}",0
+149,"public static Annotation[] getAnnotationsArrayValue(Annotation annotation) {
+Object value = getAnnotationValue(annotation);
+if (value != null && value.getClass().isArray() && Annotation.class.isAssignableFrom(value.getClass().getComponentType())) {
+return (Annotation[]) value;
+}
+return null;
+}",0
+150,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",0
+151,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+152,"public static String DFLT_FILENAME_ATTR = ""file"";",0
+153,"public static String DFLT_METHOD_ATTR = ""method"";",0
+154,"public static String DFLT_RESOURCE_ATTR = ""resource"";",0
+155,"public static String DFLT_FALSEVAL = ""false"";",0
+156,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters = null;
+if (this.paramCount > 0) {
+parameters = (Object[]) this.getDigester().popParams();
+if (this.getDigester().getLog().isTraceEnabled()) {
+Formatter formatter = new Formatter(""[CallMethodRule]"");
+for (int i = 0, size = parameters.length; i < size; i++) {
+if (i > 0) {
+formatter.format("", "");
+}
+formatter.format(""(%s) %s"", i, parameters[i]);
+}
+this.getDigester().getLog().trace(formatter.toString());
+}
+if (this.paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (this.paramTypes != null && this.paramTypes.length != 0) {
+if (this.bodyText == null) {
+return;
+}
+parameters = new Object[] { this.bodyText };
+} else {
+}
+Object[] paramValues = new Object[this.paramTypes.length];
+for (int i = 0; i < this.paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(this.paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (this.targetOffset >= 0) {
+target = this.getDigester().peek(this.targetOffset);
+} else {
+target = this.getDigester().peek(this.getDigester().getCount() + this.targetOffset);
+}
+if (target == null) {
+throw this.getDigester().createSAXException(String.format(""[CallMethodRule]{%s} Call target is null (targetOffset=%s, stackdepth=%s)"", this.getDigester().getMatch(), this.targetOffset, this.getDigester().getCount()));
+}
+if (this.getDigester().getLog().isDebugEnabled()) {
+Formatter formatter = new Formatter().format(""[CallMethodRule]{%s} Call %s.%s("", this.getDigester().getMatch(), target.getClass().getName(), this.methodName);
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+formatter.format("", "");
+}
+formatter.format(""%s/%s"", (paramValues[i] == null ? ""null"" : paramValues[i].toString()), (this.paramTypes[i] == null ? ""null"" : this.paramTypes[i].getName()));
+}
+formatter.format("")"");
+this.getDigester().getLog().debug(formatter.toString());
+}
+Object result = null;
+if (this.useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, this.methodName, paramValues, this.paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, this.methodName, paramValues, this.paramTypes);
+}
+processMethodCallResult(result);
+}",0
+157,private String currChildNamespaceURI = null;,0
+158,"protected LinkedRuleBuilder forPattern(String pattern) {
+return this.memoryRulesBinder.forPattern(pattern);
+}",0
+159,"public void end() throws Exception {
+Object[] parameters = null;
+if (paramCount > 0) {
+parameters = (Object[]) digester.popParams();
+if (digester.log.isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+digester.log.trace(""[CallMethodRule]("" + i + "")"" + parameters[i]);
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[1];
+parameters[0] = bodyText;
+if (paramTypes.length == 0) {
+paramTypes = new Class[1];
+paramTypes[0] = String.class;
+}
+} else {
+;
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = digester.peek(targetOffset);
+} else {
+target = digester.peek(digester.getCount() + targetOffset);
+}
+if (target == null) {
+StringBuffer sb = new StringBuffer();
+sb.append(""[CallMethodRule]{"");
+sb.append(digester.match);
+sb.append(""} Call target is null ("");
+sb.append(""targetOffset="");
+sb.append(targetOffset);
+sb.append("",stackdepth="");
+sb.append(digester.getCount());
+sb.append("")"");
+throw new org.xml.sax.SAXException(sb.toString());
+}
+if (digester.log.isDebugEnabled()) {
+StringBuffer sb = new StringBuffer(""[CallMethodRule]{"");
+sb.append(digester.match);
+sb.append(""} Call "");
+sb.append(target.getClass().getName());
+sb.append(""."");
+sb.append(methodName);
+sb.append(""("");
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+sb.append("","");
+}
+if (paramValues[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramValues[i].toString());
+}
+sb.append(""/"");
+if (paramTypes[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramTypes[i].getName());
+}
+}
+sb.append("")"");
+digester.log.debug(sb.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+160,"public InputSource resolveEntity(String publicId, String systemId) throws SAXException {
+if (saxLog.isDebugEnabled()) {
+saxLog.debug(""resolveEntity('"" + publicId + ""', '"" + systemId + ""')"");
+}
+if (publicId != null)
+this.publicId = publicId;
+URL entityURL = null;
+if (publicId != null) {
+entityURL = (URL) entityValidator.get(publicId);
+}
+if (schemaLocation != null && entityURL == null && systemId != null) {
+entityURL = (URL) entityValidator.get(systemId);
+}
+if (entityURL == null) {
+if (systemId == null) {
+if (log.isDebugEnabled()) {
+log.debug("" Cannot resolve entity: '"" + entityURL + ""'"");
+}
+return (null);
+} else {
+if (log.isDebugEnabled()) {
+log.debug("" Trying to resolve using system ID '"" + systemId + ""'"");
+}
+try {
+entityURL = new URL(systemId);
+} catch (MalformedURLException e) {
+throw new IllegalArgumentException(""Malformed URL '"" + systemId + ""' : "" + e.getMessage());
+}
+}
+}
+if (log.isDebugEnabled()) {
+log.debug("" Resolving to alternate DTD '"" + entityURL + ""'"");
+}
+try {
+return createInputSourceFromURL(entityURL);
+} catch (Exception e) {
+throw createSAXException(e);
+}
+}",0
+161,private String currChildNamespaceURI = null;,0
+162,"protected static String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+163,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+164,"protected static String XERCES_SCHEMA = ""http://apache.org/xml/features/validation/schema"";",0
+165,"protected static String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+166,"private static String getXercesVersion() {
+String versionNumber = ""1.0"";
+try {
+Class versionClass = Class.forName(""org.apache.xerces.impl.Version"");
+Method method = versionClass.getMethod(""getVersion"", (Class[]) null);
+String version = (String) method.invoke(null, (Object[]) null);
+versionNumber = version.substring(""Xerces-J"".length(), version.lastIndexOf("".""));
+} catch (Exception ex) {
+}
+return versionNumber;
+}",0
+167,protected static float version;,0
+168,protected static String versionNumber = null;,0
+169,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",0
+170,"public final String DFLT_PLUGIN_CLASS_ATTR = ""plugin-class"";",0
+171,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+172,"public static String DFLT_RULECLASS_SUFFIX = ""RuleInfo"";",0
+173,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+174,"public static String DFLT_FILENAME_ATTR = ""file"";",0
+175,"public static String DFLT_METHOD_ATTR = ""method"";",0
+176,"public static String DFLT_RESOURCE_ATTR = ""resource"";",0
+177,private FromXmlRuleSet ruleSet;,0
+178,"public SAXParser getParser() {
+if (parser != null) {
+return (parser);
+}
+try {
+if (validating && (schemaLocation != null)) {
+Properties properties = new Properties();
+properties.put(""SAXParserFactory"", getFactory());
+if (schemaLocation != null) {
+properties.put(""schemaLocation"", schemaLocation);
+properties.put(""schemaLanguage"", schemaLanguage);
+}
+parser = ParserFeatureSetterFactory.newSAXParser(properties);
+} else {
+parser = getFactory().newSAXParser();
+}
+} catch (Exception e) {
+log.error(""Digester.getParser: "", e);
+return (null);
+}
+return (parser);
+}",0
+179,"protected static String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+180,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+181,"protected static String XERCES_DYNAMIC = ""http://apache.org/xml/features/validation/dynamic"";",0
+182,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",0
+183,"public static String DFLT_METHOD_ATTR = ""method"";",0
+184,"public static String DFLT_RULECLASS_ATTR = ""ruleclass"";",0
+185,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+186,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+187,"public static String DFLT_METHOD_ATTR = ""method"";",0
+188,"public static String DFLT_RESOURCE_ATTR = ""resource"";",0
+189,"public static String DFLT_PROPS_ATTR = ""setprops"";",0
+190,private FromXmlRuleSet ruleSet;,0
+191,"public Object[] peekParams(final int n) {
+final int index = (params.size() - 1) - n;
+if (index < 0) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+try {
+return (params.get(index));
+} catch (final EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+192,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+@Override
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+@Override
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+@Override
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+193,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+@Override
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+@Override
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+@Override
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+194,"@Override
+protected FactoryCreateRule createRule() {
+if (type == null && attributeName == null && creationFactory == null) {
+reportError(""factoryCreate()"", ""at least one between 'className', 'attributeName' or 'creationFactory' has to be specified"");
+}
+if (type != null || attributeName != null) {
+return new FactoryCreateRule(type, attributeName, ignoreCreateExceptions);
+}
+return new FactoryCreateRule(creationFactory, ignoreCreateExceptions);
+}",0
+195,"protected LinkedRuleBuilder forPattern(final String pattern) {
+return memoryRulesBinder.forPattern(pattern);
+}",0
+196,"public void setUpdated(final Date updated) {
+this.updated = updated;
+}",0
+197,"public void setUpdated(final Date updated) {
+this.updated = updated;
+}",0
+198,"public Date getUpdated() {
+return updated;
+}",0
+199,"public void print() {
+System.out.println(""Person #"" + id);
+System.out.println(""  category="" + category);
+System.out.println(""  name="" + name);
+for (final String type : emails.keySet()) {
+final String address = emails.get(type);
+System.out.println(""  email (type "" + type + "") : "" + address);
+}
+for (final Address addr : addresses) {
+addr.print(System.out, 2);
+}
+}",0
+200,"private static java.io.Reader getInputData(final String filename) throws IOException {
+final java.io.File srcfile = new java.io.File(filename);
+final java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream(1000);
+final byte[] buf = new byte[100];
+final java.io.FileInputStream fis = new java.io.FileInputStream(srcfile);
+for (; ; ) {
+final int nread = fis.read(buf);
+if (nread == -1) {
+break;
+}
+baos.write(buf, 0, nread);
+}
+fis.close();
+return new java.io.StringReader(baos.toString());
+}",0
+201,"private static java.io.Reader getInputData(final String filename) throws IOException {
+final java.io.File srcfile = new java.io.File(filename);
+final java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream(1000);
+final byte[] buf = new byte[100];
+final java.io.FileInputStream fis = new java.io.FileInputStream(srcfile);
+for (; ; ) {
+final int nread = fis.read(buf);
+if (nread == -1) {
+break;
+}
+baos.write(buf, 0, nread);
+}
+fis.close();
+return new java.io.StringReader(baos.toString());
+}",0
+202,"public static void main(final String[] args) {
+if (args.length != 1) {
+usage();
+System.exit(-1);
+}
+final String filename = args[0];
+final Digester d = new Digester();
+final Connection connection = null;
+addRules(d, connection);
+System.out.println(""Parsing commencing..."");
+try {
+final File srcfile = new File(filename);
+d.parse(srcfile);
+} catch (final IOException ioe) {
+System.out.println(""Error reading input file:"" + ioe.getMessage());
+System.exit(-1);
+} catch (final SAXException se) {
+System.out.println(""Error parsing input file:"" + se.getMessage());
+System.exit(-1);
+}
+System.out.println(""Parsing complete."");
+}",0
+203,private final Connection conn;,0
+204,"public Date getUpdated() {
+return updated;
+}",0
+205,"public void setUpdated(final Date updated) {
+this.updated = updated;
+}",0
+206,"@Override
+public String transform(final String s) {
+if (toLower) {
+return s.toLowerCase();
+}
+return s.toUpperCase();
+}",0
+207,"private void execute() throws IOException {
+final FileReader inRaw = new FileReader(source);
+final FileWriter out = new FileWriter(dest);
+final BufferedReader in = new BufferedReader(inRaw);
+while (true) {
+final String inStr = in.readLine();
+if (inStr == null) {
+break;
+}
+final String outStr = transformer.transform(inStr);
+out.write(outStr);
+out.write('\n');
+}
+inRaw.close();
+out.close();
+System.out.println(""Contents of file "" + source + "" have been transformed, and"" + "" written to file "" + dest + ""."");
+}",0
+208,"private void execute() throws IOException {
+final FileReader inRaw = new FileReader(source);
+final FileWriter out = new FileWriter(dest);
+final BufferedReader in = new BufferedReader(inRaw);
+while (true) {
+final String inStr = in.readLine();
+if (inStr == null) {
+break;
+}
+final String outStr = transformer.transform(inStr);
+out.write(outStr);
+out.write('\n');
+}
+inRaw.close();
+out.close();
+System.out.println(""Contents of file "" + source + "" have been transformed, and"" + "" written to file "" + dest + ""."");
+}",0
+209,"private void execute() throws IOException {
+final FileReader inRaw = new FileReader(source);
+final FileWriter out = new FileWriter(dest);
+final BufferedReader in = new BufferedReader(inRaw);
+while (true) {
+final String inStr = in.readLine();
+if (inStr == null) {
+break;
+}
+final String outStr = transformer.transform(inStr);
+out.write(outStr);
+out.write('\n');
+}
+inRaw.close();
+out.close();
+System.out.println(""Contents of file "" + source + "" have been transformed, and"" + "" written to file "" + dest + ""."");
+}",0
+210,"@Override
+public String transform(final String s) {
+final StringBuilder buf = new StringBuilder(s);
+while (true) {
+final int idx = buf.indexOf(from);
+if (idx == -1) {
+break;
+}
+buf.replace(idx, idx + from.length(), to);
+}
+return buf.toString();
+}",0
+211,"public void print() {
+System.out.println(""Person #"" + id);
+System.out.println(""  category="" + category);
+System.out.println(""  name="" + name);
+for (final String type : emails.keySet()) {
+final String address = emails.get(type);
+System.out.println(""  email (type "" + type + "") : "" + address);
+}
+for (final Address addr : addresses) {
+addr.print(System.out, 2);
+}
+}",0
+212,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters;
+if (paramCount > 0) {
+parameters = getDigester().popParams();
+if (getDigester().getLogger().isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+getDigester().getLogger().trace(format(""[CallMethodRule]{%s} parameters[%s]=%s"", getDigester().getMatch(), i, parameters[i]));
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[] { bodyText };
+if (paramTypes.length == 0) {
+paramTypes = new Class[] { String.class };
+}
+} else {
+parameters = new Object[0];
+paramTypes = new Class<?>[0];
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = getDigester().peek(targetOffset);
+} else {
+target = getDigester().peek(getDigester().getCount() + targetOffset);
+}
+if (target == null) {
+throw new SAXException(format(""[CallMethodRule]{%s} Call target is null (targetOffset=%s, stackdepth=%s)"", getDigester().getMatch(), targetOffset, getDigester().getCount()));
+}
+if (getDigester().getLogger().isDebugEnabled()) {
+Formatter formatter = new Formatter().format(""[CallMethodRule]{%s} Call %s.%s("", getDigester().getMatch(), target.getClass().getName(), methodName);
+for (int i = 0; i < paramValues.length; i++) {
+formatter.format(""%s%s/%s"", (i > 0 ? "", "" : """"), paramValues[i], paramTypes[i].getName());
+}
+formatter.format("")"");
+getDigester().getLogger().debug(formatter.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+213,"public Object[] peekParams() {
+try {
+return (params.peek());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+214,"public Object[] popParams() {
+try {
+if (log.isTraceEnabled()) {
+log.trace(""Popping params"");
+}
+return (params.pop());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+215,"public Object[] peekParams(int n) {
+int index = (params.size() - 1) - n;
+if (index < 0) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+try {
+return (params.get(index));
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+216,"@SuppressWarnings(""unchecked"")
+private <A extends Annotation, E extends AnnotatedElement, R extends Rule> void handle(A annotation, E element) {
+Class<?> annotationType = annotation.annotationType();
+if (annotationType.isAnnotationPresent(DigesterRuleList.class)) {
+Annotation[] annotations = getAnnotationsArrayValue(annotation);
+if (annotations != null && annotations.length > 0) {
+for (Annotation ptr : annotations) {
+handle(ptr, element);
+}
+}
+} else if (annotationType.isAnnotationPresent(DigesterRule.class)) {
+DigesterRule digesterRule = annotationType.getAnnotation(DigesterRule.class);
+Class<? extends AnnotationHandler<Annotation, AnnotatedElement>> handlerType = (Class<? extends AnnotationHandler<Annotation, AnnotatedElement>>) digesterRule.handledBy();
+try {
+AnnotationHandler<Annotation, AnnotatedElement> handler = annotationHandlerFactory.newInstance(handlerType);
+handler.handle(annotation, element, this.rulesBinder);
+} catch (Exception e) {
+rulesBinder.addError(e);
+}
+}
+}",0
+217,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+218,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+219,"public Date getUpdated() {
+return updated;
+}",0
+220,"public Date getUpdated() {
+return updated;
+}",0
+221,"public void print() {
+System.out.println(""Person #"" + id);
+System.out.println(""  category="" + category);
+System.out.println(""  name="" + name);
+for (Iterator<String> i = emails.keySet().iterator(); i.hasNext(); ) {
+String type = i.next();
+String address = emails.get(type);
+System.out.println(""  email (type "" + type + "") : "" + address);
+}
+for (Iterator<Address> i = addresses.iterator(); i.hasNext(); ) {
+Address addr = i.next();
+addr.print(System.out, 2);
+}
+}",0
+222,"public void setUpdated(Date updated) {
+this.updated = updated;
+}",0
+223,"public String transform(String s) {
+if (toLower) {
+return s.toLowerCase();
+}
+return s.toUpperCase();
+}",0
+224,"private void execute() throws IOException {
+FileReader inRaw = new FileReader(source);
+FileWriter out = new FileWriter(dest);
+BufferedReader in = new BufferedReader(inRaw);
+while (true) {
+String inStr = in.readLine();
+if (inStr == null)
+break;
+String outStr = transformer.transform(inStr);
+out.write(outStr);
+out.write('\n');
+}
+inRaw.close();
+out.close();
+System.out.println(""Contents of file "" + source + "" have been transformed, and"" + "" written to file "" + dest + ""."");
+}",0
+225,"public String transform(String s) {
+StringBuilder buf = new StringBuilder(s);
+while (true) {
+int idx = buf.indexOf(from);
+if (idx == -1) {
+break;
+}
+buf.replace(idx, idx + from.length(), to);
+}
+return buf.toString();
+}",0
+226,"public static void main(String[] args) {
+try {
+System.out.println(""RSSDigester Test Program"");
+System.out.println(""Opening input stream ..."");
+InputStream is = RSSDigester.class.getResourceAsStream(""/org/apache/commons/digester3/rss/rss-example.xml"");
+System.out.println(""Creating new digester ..."");
+RSSDigester digester = new RSSDigester();
+if ((args.length > 0) && (args[0].equals(""-debug""))) {
+digester.setLogger(LogFactory.getLog(""RSSDigester""));
+}
+System.out.println(""Parsing input stream ..."");
+Channel channel = (Channel) digester.parse(is);
+System.out.println(""Closing input stream ..."");
+is.close();
+System.out.println(""Dumping channel info ..."");
+channel.render(System.out);
+} catch (Exception e) {
+System.out.println(""-->Exception"");
+e.printStackTrace(System.out);
+}
+}",0
+227,"public void print() {
+System.out.println(""Person #"" + id);
+System.out.println(""  category="" + category);
+System.out.println(""  name="" + name);
+for (Iterator<String> i = emails.keySet().iterator(); i.hasNext(); ) {
+String type = i.next();
+String address = emails.get(type);
+System.out.println(""  email (type "" + type + "") : "" + address);
+}
+for (Iterator<Address> i = addresses.iterator(); i.hasNext(); ) {
+Address addr = i.next();
+addr.print(System.out, 2);
+}
+}",0
+228,"public SAXParser getParser() {
+if (parser != null) {
+return (parser);
+}
+try {
+if (validating && (schemaLocation != null)) {
+Properties properties = new Properties();
+properties.put(""SAXParserFactory"", getFactory());
+if (schemaLocation != null) {
+properties.put(""schemaLocation"", schemaLocation);
+properties.put(""schemaLanguage"", schemaLanguage);
+}
+parser = ParserFeatureSetterFactory.newSAXParser(properties);
+} else {
+parser = getFactory().newSAXParser();
+}
+} catch (Exception e) {
+log.error(""Digester.getParser: "", e);
+return (null);
+}
+return (parser);
+}",0
+229,"public InputSource resolveEntity(String publicId, String systemId) throws SAXException {
+if (saxLog.isDebugEnabled()) {
+saxLog.debug(""resolveEntity('"" + publicId + ""', '"" + systemId + ""')"");
+}
+if (publicId != null)
+this.publicId = publicId;
+URL entityURL = null;
+if (publicId != null) {
+entityURL = (URL) entityValidator.get(publicId);
+}
+if (schemaLocation != null && entityURL == null && systemId != null) {
+entityURL = (URL) entityValidator.get(systemId);
+}
+if (entityURL == null) {
+if (systemId == null) {
+if (log.isDebugEnabled()) {
+log.debug("" Cannot resolve entity: '"" + entityURL + ""'"");
+}
+return (null);
+} else {
+if (log.isDebugEnabled()) {
+log.debug("" Trying to resolve using system ID '"" + systemId + ""'"");
+}
+try {
+entityURL = new URL(systemId);
+} catch (MalformedURLException e) {
+throw new IllegalArgumentException(""Malformed URL '"" + systemId + ""' : "" + e.getMessage());
+}
+}
+}
+if (log.isDebugEnabled()) {
+log.debug("" Resolving to alternate DTD '"" + entityURL + ""'"");
+}
+try {
+return createInputSourceFromURL(entityURL);
+} catch (Exception e) {
+throw createSAXException(e);
+}
+}",0
+230,protected String namespaceURI = null;,0
+231,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+232,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+233,"protected static String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+234,protected static float version;,0
+235,"protected static String XERCES_SCHEMA = ""http://apache.org/xml/features/validation/schema"";",0
+236,"public static SAXParser newSAXParser(Properties properties) throws ParserConfigurationException, SAXException, SAXNotSupportedException {
+SAXParserFactory factory = (SAXParserFactory) properties.get(""SAXParserFactory"");
+if (versionNumber == null) {
+versionNumber = getXercesVersion();
+version = new Float(versionNumber).floatValue();
+}
+// Note: 2.2 is completely broken (with XML Schema).
+if (version > 2.1) {
+configureXerces(factory);
+return factory.newSAXParser();
+} else {
+SAXParser parser = factory.newSAXParser();
+configureOldXerces(parser, properties);
+return parser;
+}
+}",0
+237,"private static String getXercesVersion() {
+String versionNumber = ""1.0"";
+try {
+Class versionClass = Class.forName(""org.apache.xerces.impl.Version"");
+Method method = versionClass.getMethod(""getVersion"", (Class[]) null);
+String version = (String) method.invoke(null, (Object[]) null);
+versionNumber = version.substring(""Xerces-J"".length(), version.lastIndexOf("".""));
+} catch (Exception ex) {
+}
+return versionNumber;
+}",0
+238,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",0
+239,"public final String DFLT_PLUGIN_CLASS_ATTR = ""plugin-class"";",0
+240,"public static String DFLT_RULECLASS_ATTR = ""ruleclass"";",0
+241,"public static String DFLT_METHOD_ATTR = ""method"";",0
+242,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+243,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+244,"public static String DFLT_RESOURCE_SUFFIX = ""RuleInfo.xml"";",0
+245,"public static String DFLT_FILENAME_ATTR = ""file"";",0
+246,"public static String DFLT_PROPS_ATTR = ""setprops"";",0
+247,private FromXmlRuleSet ruleSet;,0
+248,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters = null;
+if (paramCount > 0) {
+parameters = getDigester().popParams();
+if (getDigester().getLogger().isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+getDigester().getLogger().trace(""[CallMethodRule]("" + i + "")"" + parameters[i]);
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[1];
+parameters[0] = bodyText;
+if (paramTypes.length == 0) {
+paramTypes = new Class[1];
+paramTypes[0] = String.class;
+}
+} else {
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = getDigester().peek(targetOffset);
+} else {
+target = getDigester().peek(getDigester().getCount() + targetOffset);
+}
+if (target == null) {
+StringBuilder sb = new StringBuilder();
+sb.append(""[CallMethodRule]{"");
+sb.append(getDigester().getMatch());
+sb.append(""} Call target is null ("");
+sb.append(""targetOffset="");
+sb.append(targetOffset);
+sb.append("",stackdepth="");
+sb.append(getDigester().getCount());
+sb.append("")"");
+throw new org.xml.sax.SAXException(sb.toString());
+}
+if (getDigester().getLogger().isDebugEnabled()) {
+StringBuilder sb = new StringBuilder(""[CallMethodRule]{"");
+sb.append(getDigester().getMatch());
+sb.append(""} Call "");
+sb.append(target.getClass().getName());
+sb.append(""."");
+sb.append(methodName);
+sb.append(""("");
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+sb.append("","");
+}
+if (paramValues[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramValues[i].toString());
+}
+sb.append(""/"");
+if (paramTypes[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramTypes[i].getName());
+}
+}
+sb.append("")"");
+getDigester().getLogger().debug(sb.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+249,private final float loadFactor = 0.75f;,0
+250,private final int cacheSize = 255;,0
+251,"private final Map<Class<?>, FromAnnotationsRuleSet> data = new LinkedHashMap<Class<?>, FromAnnotationsRuleSet>(capacity, loadFactor) {
+private static final long serialVersionUID = 1L;
+@Override
+protected boolean removeEldestEntry(Map.Entry<Class<?>, FromAnnotationsRuleSet> eldest) {
+return size() > cacheSize;
+}
+};",0
+252,"public static Annotation[] getAnnotationsArrayValue(Annotation annotation) {
+Object value = getAnnotationValue(annotation);
+if (value != null && value.getClass().isArray() && Annotation.class.isAssignableFrom(value.getClass().getComponentType())) {
+return (Annotation[]) value;
+}
+return null;
+}",0
+253,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",0
+254,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+255,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+256,"public static String DFLT_FILENAME_ATTR = ""file"";",0
+257,"public static String DFLT_METHOD_ATTR = ""method"";",0
+258,"public static String DFLT_FALSEVAL = ""false"";",0
+259,"public Object[] peekParams(int n) {
+int index = (params.size() - 1) - n;
+if (index < 0) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+try {
+return (params.get(index));
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+260,"public Object[] popParams() {
+try {
+if (log.isTraceEnabled()) {
+log.trace(""Popping params"");
+}
+return (params.pop());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+261,"public static Annotation[] getAnnotationsArrayValue(Annotation annotation) {
+Object value = getAnnotationValue(annotation);
+if (value != null && value.getClass().isArray() && Annotation.class.isAssignableFrom(value.getClass().getComponentType())) {
+return (Annotation[]) value;
+}
+return null;
+}",0
+262,"@Override
+protected FactoryCreateRule createRule() {
+if (type == null && attributeName == null && creationFactory == null) {
+reportError(""factoryCreate()"", ""at least one between 'className', 'attributeName' or 'creationFactory' has to be specified"");
+}
+if (type != null || attributeName != null) {
+return new FactoryCreateRule(type, attributeName, ignoreCreateExceptions);
+}
+return new FactoryCreateRule(creationFactory, ignoreCreateExceptions);
+}",0
+263,"@Override
+public void begin(String namespace, String name, Attributes attributes) throws Exception {
+String fileName = attributes.getValue(""url"");
+if (fileName != null && fileName.length() > 0) {
+final URL xmlRulesResource;
+if (fileName.startsWith(CLASSPATH_URL_PREFIX)) {
+String path = fileName.substring(CLASSPATH_URL_PREFIX.length());
+if ('/' == path.charAt(0)) {
+path = path.substring(1);
+}
+xmlRulesResource = this.targetRulesBinder.getContextClassLoader().getResource(path);
+if (xmlRulesResource == null) {
+targetRulesBinder.addError(""Resource '%s' not found, please make sure it is in the classpath"", path);
+return;
+}
+} else {
+try {
+xmlRulesResource = new URL(fileName);
+} catch (MalformedURLException e) {
+targetRulesBinder.addError(""An error occurred while inculing file from '%s': %s"", fileName, e.getMessage());
+return;
+}
+}
+if (memoryRulesBinder.getIncludedFiles().add(xmlRulesResource.toString())) {
+install(new FromXmlRulesModule() {
+@Override
+protected void loadRules() {
+loadXMLRules(xmlRulesResource);
+}
+});
+} else {
+targetRulesBinder.addError(""Circular file inclusion detected for XML rules: %s"", xmlRulesResource);
+}
+}
+String className = attributes.getValue(""class"");
+if (className != null && className.length() > 0) {
+try {
+Class<?> cls = Class.forName(className);
+if (!RulesModule.class.isAssignableFrom(cls)) {
+targetRulesBinder.addError(""Class '%s' if not a '%s' implementation"", className, RulesModule.class.getName());
+return;
+}
+RulesModule rulesSource = (RulesModule) cls.newInstance();
+install(rulesSource);
+} catch (Exception e) {
+targetRulesBinder.addError(""Impossible to include programmatic rules from class '%s': %s"", className, e.getMessage());
+}
+}
+}",0
+264,"private void invoke() throws Exception {
+Object child = getChild();
+Object parent = getParent();
+if (getDigester().getLogger().isDebugEnabled()) {
+if (parent == null) {
+getDigester().getLogger().debug(format(""[%s]{%s} Call [NULL PARENT].%s(%s)"", getClass().getSimpleName(), getDigester().getMatch(), methodName, child));
+} else {
+getDigester().getLogger().debug(format(""[%s]{%s} Call %s.%s(%s)"", getClass().getSimpleName(), getDigester().getMatch(), parent.getClass().getName(), methodName, child));
+}
+}
+Class<?>[] paramTypes = new Class<?>[1];
+if (paramType != null) {
+paramTypes[0] = getDigester().getClassLoader().loadClass(paramTypeName);
+} else {
+paramTypes[0] = child.getClass();
+}
+if (useExactMatch) {
+invokeExactMethod(parent, methodName, new Object[] { child }, paramTypes);
+} else {
+invokeMethod(parent, methodName, new Object[] { child }, paramTypes);
+}
+}",0
+265,"public Object[] peekParams(int n) {
+int index = (params.size() - 1) - n;
+if (index < 0) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+try {
+return (params.get(index));
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+266,"public Object[] peekParams() {
+try {
+return (params.peek());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+267,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+268,"@SuppressWarnings(""unchecked"")
+private <A extends Annotation, E extends AnnotatedElement, R extends Rule> void handle(A annotation, E element) {
+Class<?> annotationType = annotation.annotationType();
+if (annotationType.isAnnotationPresent(DigesterRuleList.class)) {
+Annotation[] annotations = getAnnotationsArrayValue(annotation);
+if (annotations != null && annotations.length > 0) {
+for (Annotation ptr : annotations) {
+handle(ptr, element);
+}
+}
+} else if (annotationType.isAnnotationPresent(DigesterRule.class)) {
+DigesterRule digesterRule = annotationType.getAnnotation(DigesterRule.class);
+Class<? extends AnnotationHandler<Annotation, AnnotatedElement>> handlerType = (Class<? extends AnnotationHandler<Annotation, AnnotatedElement>>) digesterRule.handledBy();
+try {
+AnnotationHandler<Annotation, AnnotatedElement> handler = annotationHandlerFactory.newInstance(handlerType);
+handler.handle(annotation, element, this.rulesBinder);
+} catch (Exception e) {
+rulesBinder.addError(e);
+}
+}
+}",0
+269,"public static Annotation[] getAnnotationsArrayValue(Annotation annotation) {
+Object value = getAnnotationValue(annotation);
+if (value != null && value.getClass().isArray() && Annotation.class.isAssignableFrom(value.getClass().getComponentType())) {
+return (Annotation[]) value;
+}
+return null;
+}",0
+270,"@Override
+protected FactoryCreateRule createRule() {
+if (type == null && attributeName == null && creationFactory == null) {
+reportError(""factoryCreate()"", ""at least one between 'className', 'attributeName' or 'creationFactory' has to be specified"");
+}
+if (type != null || attributeName != null) {
+return new FactoryCreateRule(type, attributeName, ignoreCreateExceptions);
+}
+return new FactoryCreateRule(creationFactory, ignoreCreateExceptions);
+}",0
+271,"protected LinkedRuleBuilder forPattern(String pattern) {
+return memoryRulesBinder.forPattern(pattern);
+}",0
+272,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters = null;
+if (paramCount > 0) {
+parameters = getDigester().popParams();
+if (getDigester().getLogger().isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+getDigester().getLogger().trace(format(""[CallMethodRule]{%s} parameters[%s]=%s"", getDigester().getMatch(), i, parameters[i]));
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[1];
+parameters[0] = bodyText;
+if (paramTypes.length == 0) {
+paramTypes = new Class[1];
+paramTypes[0] = String.class;
+}
+} else {
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = getDigester().peek(targetOffset);
+} else {
+target = getDigester().peek(getDigester().getCount() + targetOffset);
+}
+if (target == null) {
+throw new SAXException(format(""[CallMethodRule]{%s} Call target is null (targetOffset=%s, stackdepth=%s)"", getDigester().getMatch(), targetOffset, getDigester().getCount()));
+}
+if (getDigester().getLogger().isDebugEnabled()) {
+Formatter formatter = new Formatter().format(""[CallMethodRule]{%s} Call %s.%s("", getDigester().getMatch(), target.getClass().getName(), methodName);
+for (int i = 0; i < paramValues.length; i++) {
+formatter.format(""%s%s/%s"", (i > 0 ? "", "" : """"), paramValues[i], paramTypes[i].getName());
+}
+formatter.format("")"");
+getDigester().getLogger().debug(formatter.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+273,"public Object[] popParams() {
+try {
+if (log.isTraceEnabled()) {
+log.trace(""Popping params"");
+}
+return (params.pop());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+274,"public Object[] peekParams() {
+try {
+return (params.peek());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+275,private String currChildNamespaceURI = null;,0
+276,"protected LinkedRuleBuilder forPattern(String pattern) {
+return memoryRulesBinder.forPattern(pattern);
+}",0
+277,"public Object[] peekParams(int n) {
+int index = (params.size() - 1) - n;
+if (index < 0) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+try {
+return (params.get(index));
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+278,"@Override
+public void begin(String namespace, String name, Attributes attributes) throws Exception {
+String fileName = attributes.getValue(""url"");
+if (fileName != null && fileName.length() > 0) {
+final URL xmlRulesResource;
+if (fileName.startsWith(CLASSPATH_URL_PREFIX)) {
+String path = fileName.substring(CLASSPATH_URL_PREFIX.length());
+if ('/' == path.charAt(0)) {
+path = path.substring(1);
+}
+xmlRulesResource = this.targetRulesBinder.getContextClassLoader().getResource(path);
+if (xmlRulesResource == null) {
+targetRulesBinder.addError(""Resource '%s' not found, please make sure it is in the classpath"", path);
+return;
+}
+} else {
+try {
+xmlRulesResource = new URL(fileName);
+} catch (MalformedURLException e) {
+targetRulesBinder.addError(""An error occurred while inculing file from '%s': %s"", fileName, e.getMessage());
+return;
+}
+}
+if (memoryRulesBinder.getIncludedFiles().add(xmlRulesResource.toString())) {
+install(new FromXmlRulesModule() {
+@Override
+protected void loadRules() {
+loadXMLRules(xmlRulesResource);
+}
+});
+} else {
+targetRulesBinder.addError(""Circular file inclusion detected for XML rules: %s"", xmlRulesResource);
+}
+}
+String className = attributes.getValue(""class"");
+if (className != null && className.length() > 0) {
+try {
+Class<?> cls = Class.forName(className);
+if (!RulesModule.class.isAssignableFrom(cls)) {
+targetRulesBinder.addError(""Class '%s' if not a '%s' implementation"", className, RulesModule.class.getName());
+return;
+}
+RulesModule rulesSource = (RulesModule) cls.newInstance();
+install(rulesSource);
+} catch (Exception e) {
+targetRulesBinder.addError(""Impossible to include programmatic rules from class '%s': %s"", className, e.getMessage());
+}
+}
+}",0
+279,"public SAXParser getParser() {
+if (parser != null) {
+return (parser);
+}
+try {
+if (validating && (schemaLocation != null)) {
+Properties properties = new Properties();
+properties.put(""SAXParserFactory"", getFactory());
+if (schemaLocation != null) {
+properties.put(""schemaLocation"", schemaLocation);
+properties.put(""schemaLanguage"", schemaLanguage);
+}
+parser = ParserFeatureSetterFactory.newSAXParser(properties);
+} else {
+parser = getFactory().newSAXParser();
+}
+} catch (Exception e) {
+log.error(""Digester.getParser: "", e);
+return (null);
+}
+return (parser);
+}",0
+280,protected String namespaceURI = null;,0
+281,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+282,"protected static String XERCES_SCHEMA = ""http://apache.org/xml/features/validation/schema"";",0
+283,"protected static String XERCES_DYNAMIC = ""http://apache.org/xml/features/validation/dynamic"";",0
+284,"private static String getXercesVersion() {
+String versionNumber = ""1.0"";
+try {
+Class versionClass = Class.forName(""org.apache.xerces.impl.Version"");
+Method method = versionClass.getMethod(""getVersion"", (Class[]) null);
+String version = (String) method.invoke(null, (Object[]) null);
+versionNumber = version.substring(""Xerces-J"".length(), version.lastIndexOf("".""));
+} catch (Exception ex) {
+}
+return versionNumber;
+}",0
+285,protected static String versionNumber = null;,0
+286,"protected static Log log = LogFactory.getLog(""org.apache.commons.digester.Digester.sax"");",0
+287,"protected static String JAXP_SCHEMA_LANGUAGE = ""http://java.sun.com/xml/jaxp/properties/schemaLanguage"";",0
+288,"public final String DFLT_PLUGIN_CLASS_ATTR = ""plugin-class"";",0
+289,"public static String DFLT_METHOD_ATTR = ""method"";",0
+290,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+291,"public static String DFLT_RULECLASS_ATTR = ""ruleclass"";",0
+292,"public static String DFLT_METHOD_NAME = ""addRules"";",0
+293,"public static String DFLT_FILENAME_ATTR = ""file"";",0
+294,"public static String DFLT_METHOD_ATTR = ""method"";",0
+295,"public static String DFLT_FALSEVAL = ""false"";",0
+296,"public static String DFLT_PROPS_ATTR = ""setprops"";",0
+297,private FromXmlRuleSet ruleSet;,0
+298,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters;
+if (paramCount > 0) {
+parameters = getDigester().popParams();
+if (getDigester().getLogger().isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+getDigester().getLogger().trace(format(""[CallMethodRule]{%s} parameters[%s]=%s"", getDigester().getMatch(), i, parameters[i]));
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[] { bodyText };
+if (paramTypes.length == 0) {
+paramTypes = new Class[] { String.class };
+}
+} else {
+parameters = new Object[0];
+paramTypes = new Class<?>[0];
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = getDigester().peek(targetOffset);
+} else {
+target = getDigester().peek(getDigester().getCount() + targetOffset);
+}
+if (target == null) {
+throw new SAXException(format(""[CallMethodRule]{%s} Call target is null (targetOffset=%s, stackdepth=%s)"", getDigester().getMatch(), targetOffset, getDigester().getCount()));
+}
+if (getDigester().getLogger().isDebugEnabled()) {
+Formatter formatter = new Formatter().format(""[CallMethodRule]{%s} Call %s.%s("", getDigester().getMatch(), target.getClass().getName(), methodName);
+for (int i = 0; i < paramValues.length; i++) {
+formatter.format(""%s%s/%s"", (i > 0 ? "", "" : """"), paramValues[i], paramTypes[i].getName());
+}
+formatter.format("")"");
+getDigester().getLogger().debug(formatter.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+299,"public Object[] peekParams() {
+try {
+return (params.peek());
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+300,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+301,"protected final void bindRulesFrom(final Class<?> type) {
+if (type == null || type.getPackage().getName().startsWith(JAVA_PACKAGE) || rulesBinder.isAlreadyBound(type)) {
+return;
+}
+visitElements(type);
+if (!type.isInterface()) {
+visitElements(new PrivilegedAction<Constructor<?>[]>() {
+public Constructor<?>[] run() {
+return type.getDeclaredConstructors();
+}
+});
+visitElements(new PrivilegedAction<Field[]>() {
+public Field[] run() {
+return type.getDeclaredFields();
+}
+});
+}
+visitElements(new PrivilegedAction<Method[]>() {
+public Method[] run() {
+return type.getDeclaredMethods();
+}
+});
+rulesBinder.markAsBound(type);
+bindRulesFrom(type.getSuperclass());
+}",0
+302,"public static Annotation[] getAnnotationsArrayValue(Annotation annotation) {
+Object value = getAnnotationValue(annotation);
+if (value != null && value.getClass().isArray() && Annotation.class.isAssignableFrom(value.getClass().getComponentType())) {
+return (Annotation[]) value;
+}
+return null;
+}",0
+303,"@Override
+protected FactoryCreateRule createRule() {
+if (type == null && attributeName == null && creationFactory == null) {
+reportError(""factoryCreate()"", ""at least one between 'className', 'attributeName' or 'creationFactory' has to be specified"");
+}
+if (type != null || attributeName != null) {
+return new FactoryCreateRule(type, attributeName, ignoreCreateExceptions);
+}
+return new FactoryCreateRule(creationFactory, ignoreCreateExceptions);
+}",0
+304,"public final String DFLT_PLUGIN_ID_ATTR = ""plugin-id"";",1
+305,"private <R extends Rule> RuleProvider<R> addProvider(RuleProvider<R> provider) {
+if (keyPattern == null) {
+return provider;
+}
+List<RuleProvider<? extends Rule>> providerLits = providers.get(keyPattern);
+if (providerLits == null) {
+providerLits = new ArrayList<RuleProvider<? extends Rule>>();
+providers.put(keyPattern, providerLits);
+}
+providerLits.add(provider);
+return provider;
+}",1
+306,"private void invoke() throws Exception {
+final Object child = getChild();
+final Object parent = getParent();
+if (getDigester().getLogger().isDebugEnabled()) {
+if (parent == null) {
+getDigester().getLogger().debug(format(""[%s]{%s} Call [NULL PARENT].%s(%s)"", getClass().getSimpleName(), getDigester().getMatch(), methodName, child));
+} else {
+getDigester().getLogger().debug(format(""[%s]{%s} Call %s.%s(%s)"", getClass().getSimpleName(), getDigester().getMatch(), parent.getClass().getName(), methodName, child));
+}
+}
+final Class<?>[] paramTypes = new Class<?>[1];
+if (paramType != null) {
+paramTypes[0] = getDigester().getClassLoader().loadClass(paramTypeName);
+} else {
+paramTypes[0] = child.getClass();
+}
+if (useExactMatch) {
+invokeExactMethod(parent, methodName, new Object[] { child }, paramTypes);
+} else {
+invokeMethod(parent, methodName, new Object[] { child }, paramTypes);
+}
+}",0
+307,private Substitutor substitutor;,1
+308,private String namespaceURI;,1
+309,"public static String DFLT_PROPS_ATTR = ""setprops"";",1
+310,"@Override
+public void begin(String namespace, String name, Attributes attributes) throws Exception {
+Class<?> clazz = this.clazz;
+if (clazz == null) {
+String realClassName = className;
+if (attributeName != null) {
+String value = attributes.getValue(attributeName);
+if (value != null) {
+realClassName = value;
+}
+}
+if (getDigester().getLogger().isDebugEnabled()) {
+getDigester().getLogger().debug(format(""[ObjectCreateRule]{%s} New '%s'"", getDigester().getMatch(), realClassName));
+}
+clazz = getDigester().getClassLoader().loadClass(realClassName);
+}
+Object instance;
+if (constructorArgumentTypes == null || constructorArgumentTypes.length == 0) {
+if (getDigester().getLogger().isDebugEnabled()) {
+getDigester().getLogger().debug(format(""[ObjectCreateRule]{%s} New '%s' using default empty constructor"", getDigester().getMatch(), clazz.getName()));
+}
+instance = clazz.newInstance();
+} else {
+if (proxyManager == null) {
+synchronized (this) {
+if (proxyManager == null) {
+Constructor<?> constructor = getAccessibleConstructor(clazz, constructorArgumentTypes);
+if (constructor == null) {
+throw new SAXException(format(""[ObjectCreateRule]{%s} Class '%s' does not have a construcor with types"", getDigester().getMatch(), clazz.getName(), Arrays.toString(constructorArgumentTypes)));
+}
+proxyManager = new ProxyManager(clazz, constructor, defaultConstructorArguments, getDigester());
+}
+}
+}
+instance = proxyManager.createProxy();
+}
+getDigester().push(instance);
+}",1
+311,"Object createProxy() {
+Object[] constructorArguments = new Object[templateConstructorArguments.length];
+arraycopy(templateConstructorArguments, 0, constructorArguments, 0, constructorArguments.length);
+digester.pushParams(constructorArguments);
+DeferredConstructionCallback callback = new DeferredConstructionCallback(constructor, constructorArguments);
+Object result;
+if (factory == null) {
+synchronized (this) {
+// check again for null now that we're in the synchronized block:
+if (factory == null) {
+Enhancer enhancer = new Enhancer();
+enhancer.setSuperclass(clazz);
+enhancer.setCallback(callback);
+enhancer.setClassLoader(digester.getClassLoader());
+enhancer.setInterceptDuringConstruction(false);
+if (hasDefaultConstructor) {
+result = enhancer.create();
+} else {
+result = enhancer.create(constructor.getParameterTypes(), constructorArguments);
+}
+factory = (Factory) result;
+return result;
+}
+}
+}
+if (hasDefaultConstructor) {
+result = factory.newInstance(callback);
+} else {
+result = factory.newInstance(constructor.getParameterTypes(), constructorArguments, new Callback[] { callback });
+}
+return result;
+}",1
+312,"protected void addError(String messagePattern, Object... arguments) {
+this.rulesBinder.addError(messagePattern, arguments);
+}",0
+313,"public final String DFLT_PLUGIN_CLASS_ATTR = ""plugin-class"";",1
+314,"public InputSource resolveEntity(String publicId, String systemId) throws SAXException {
+if (saxLog.isDebugEnabled()) {
+saxLog.debug(""resolveEntity('"" + publicId + ""', '"" + systemId + ""')"");
+}
+if (publicId != null)
+this.publicId = publicId;
+URL entityURL = null;
+if (publicId != null) {
+entityURL = (URL) entityValidator.get(publicId);
+}
+if (schemaLocation != null && entityURL == null && systemId != null) {
+entityURL = (URL) entityValidator.get(systemId);
+}
+if (entityURL == null) {
+if (systemId == null) {
+if (log.isDebugEnabled()) {
+log.debug("" Cannot resolve entity: '"" + entityURL + ""'"");
+}
+return (null);
+} else {
+if (log.isDebugEnabled()) {
+log.debug("" Trying to resolve using system ID '"" + systemId + ""'"");
+}
+try {
+entityURL = new URL(systemId);
+} catch (MalformedURLException e) {
+throw new IllegalArgumentException(""Malformed URL '"" + systemId + ""' : "" + e.getMessage());
+}
+}
+}
+if (log.isDebugEnabled()) {
+log.debug("" Resolving to alternate DTD '"" + entityURL + ""'"");
+}
+try {
+return createInputSourceFromURL(entityURL);
+} catch (Exception e) {
+throw createSAXException(e);
+}
+}",1
+315,"public static String DFLT_METHOD_NAME = ""addRules"";",1
+316,"public static String DFLT_METHOD_NAME = ""addRules"";",1
+317,"public static String DFLT_FALSEVAL = ""false"";",1
+318,"public static String DFLT_RULECLASS_SUFFIX = ""RuleInfo"";",1
+319,"@Override
+public void begin(String namespace, String name, Attributes attributes) throws Exception {
+Class<?> clazz = this.clazz;
+if (clazz == null) {
+String realClassName = className;
+if (attributeName != null) {
+String value = attributes.getValue(attributeName);
+if (value != null) {
+realClassName = value;
+}
+}
+if (getDigester().getLogger().isDebugEnabled()) {
+getDigester().getLogger().debug(format(""[ObjectCreateRule]{%s} New '%s'"", getDigester().getMatch(), realClassName));
+}
+clazz = getDigester().getClassLoader().loadClass(realClassName);
+}
+Object instance;
+if (constructorArgumentsTypes == null || constructorArgumentsTypes.length == 0) {
+if (getDigester().getLogger().isDebugEnabled()) {
+getDigester().getLogger().debug(format(""[ObjectCreateRule]{%s} New '%s' using default empty constructor"", getDigester().getMatch(), clazz.getName()));
+}
+instance = clazz.newInstance();
+} else {
+Constructor<?> constructor = getAccessibleConstructor(clazz, constructorArgumentsTypes);
+if (constructor == null) {
+throw new SAXException(format(""[ObjectCreateRule]{%s} Class '%s' does not have a construcor with types"", getDigester().getMatch(), clazz.getName(), Arrays.toString(constructorArgumentsTypes)));
+}
+instance = createLazyProxy(constructor);
+}
+getDigester().push(instance);
+}",0
+320,"public static String DFLT_RESOURCE_SUFFIX = ""RuleInfo.xml"";",1
+321,"@Override
+public void begin(String namespace, String name, Attributes attributes) throws Exception {
+Class<?> clazz = this.clazz;
+if (clazz == null) {
+String realClassName = className;
+if (attributeName != null) {
+String value = attributes.getValue(attributeName);
+if (value != null) {
+realClassName = value;
+}
+}
+if (getDigester().getLogger().isDebugEnabled()) {
+getDigester().getLogger().debug(format(""[ObjectCreateRule]{%s} New '%s'"", getDigester().getMatch(), realClassName));
+}
+clazz = getDigester().getClassLoader().loadClass(realClassName);
+}
+Object instance;
+if (constructorArgumentTypes == null || constructorArgumentTypes.length == 0) {
+if (getDigester().getLogger().isDebugEnabled()) {
+getDigester().getLogger().debug(format(""[ObjectCreateRule]{%s} New '%s' using default empty constructor"", getDigester().getMatch(), clazz.getName()));
+}
+instance = clazz.newInstance();
+} else {
+if (proxyManager == null) {
+synchronized (this) {
+if (proxyManager == null) {
+Constructor<?> constructor = getAccessibleConstructor(clazz, constructorArgumentTypes);
+if (constructor == null) {
+throw new SAXException(format(""[ObjectCreateRule]{%s} Class '%s' does not have a construcor with types %s"", getDigester().getMatch(), clazz.getName(), Arrays.toString(constructorArgumentTypes)));
+}
+proxyManager = new ProxyManager(clazz, constructor, defaultConstructorArguments, getDigester());
+}
+}
+}
+instance = proxyManager.createProxy();
+}
+getDigester().push(instance);
+}",1
+322,"public Object[] peekParams(int n) {
+int index = (params.size() - 1) - n;
+if (index < 0) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+try {
+return (params.get(index));
+} catch (EmptyStackException e) {
+log.warn(""Empty stack (returning null)"");
+return (null);
+}
+}",0
+323,"@Override
+public void end(String namespace, String name) throws Exception {
+Object[] parameters = null;
+if (paramCount > 0) {
+parameters = getDigester().popParams();
+if (getDigester().getLogger().isTraceEnabled()) {
+for (int i = 0, size = parameters.length; i < size; i++) {
+getDigester().getLogger().trace(""[CallMethodRule]("" + i + "")"" + parameters[i]);
+}
+}
+if (paramCount == 1 && parameters[0] == null) {
+return;
+}
+} else if (paramTypes != null && paramTypes.length != 0) {
+if (bodyText == null) {
+return;
+}
+parameters = new Object[1];
+parameters[0] = bodyText;
+if (paramTypes.length == 0) {
+paramTypes = new Class[1];
+paramTypes[0] = String.class;
+}
+} else {
+}
+Object[] paramValues = new Object[paramTypes.length];
+for (int i = 0; i < paramTypes.length; i++) {
+if (parameters[i] == null || (parameters[i] instanceof String && !String.class.isAssignableFrom(paramTypes[i]))) {
+paramValues[i] = ConvertUtils.convert((String) parameters[i], paramTypes[i]);
+} else {
+paramValues[i] = parameters[i];
+}
+}
+Object target;
+if (targetOffset >= 0) {
+target = getDigester().peek(targetOffset);
+} else {
+target = getDigester().peek(getDigester().getCount() + targetOffset);
+}
+if (target == null) {
+StringBuilder sb = new StringBuilder();
+sb.append(""[CallMethodRule]{"");
+sb.append(getDigester().getMatch());
+sb.append(""} Call target is null ("");
+sb.append(""targetOffset="");
+sb.append(targetOffset);
+sb.append("",stackdepth="");
+sb.append(getDigester().getCount());
+sb.append("")"");
+throw new org.xml.sax.SAXException(sb.toString());
+}
+if (getDigester().getLogger().isDebugEnabled()) {
+StringBuilder sb = new StringBuilder(""[CallMethodRule]{"");
+sb.append(getDigester().getMatch());
+sb.append(""} Call "");
+sb.append(target.getClass().getName());
+sb.append(""."");
+sb.append(methodName);
+sb.append(""("");
+for (int i = 0; i < paramValues.length; i++) {
+if (i > 0) {
+sb.append("","");
+}
+if (paramValues[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramValues[i].toString());
+}
+sb.append(""/"");
+if (paramTypes[i] == null) {
+sb.append(""null"");
+} else {
+sb.append(paramTypes[i].getName());
+}
+}
+sb.append("")"");
+getDigester().getLogger().debug(sb.toString());
+}
+Object result = null;
+if (useExactMatch) {
+result = MethodUtils.invokeExactMethod(target, methodName, paramValues, paramTypes);
+} else {
+result = MethodUtils.invokeMethod(target, methodName, paramValues, paramTypes);
+}
+processMethodCallResult(result);
+}",0
+324,"private void invoke() throws Exception {
+Object child = getChild();
+Object parent = getParent();
+if (getDigester().getLogger().isDebugEnabled()) {
+if (parent == null) {
+getDigester().getLogger().debug(format(""[%s]{%s} Call [NULL PARENT].%s(%s)"", getClass().getSimpleName(), getDigester().getMatch(), methodName, child));
+} else {
+getDigester().getLogger().debug(format(""[%s]{%s} Call %s.%s(%s)"", getClass().getSimpleName(), getDigester().getMatch(), parent.getClass().getName(), methodName, child));
+}
+}
+Class<?>[] paramTypes = new Class<?>[1];
+if (paramType != null) {
+paramTypes[0] = getDigester().getClassLoader().loadClass(paramTypeName);
+} else {
+paramTypes[0] = child.getClass();
+}
+if (useExactMatch) {
+invokeExactMethod(parent, methodName, new Object[] { child }, paramTypes);
+} else {
+invokeMethod(parent, methodName, new Object[] { child }, paramTypes);
+}
+}",0
