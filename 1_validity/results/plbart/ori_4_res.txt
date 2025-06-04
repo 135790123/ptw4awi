@@ -1,0 +1,7 @@
+test_accuracy=0.9492
+test_auc:=0.6531
+test_f1=0.3758
+test_mcc:=0.3544
+test_precision=0.4429
+test_recall=0.3263
+test_threshold=0.5
